@@ -31,4 +31,7 @@ El coneixement s'organitza de manera gradual, des de la supervivència bàsica f
 
 ## Com Col·laborar
 
-Aquest és un projecte obert a tothom. Si vols ajudar a construir aquest llegat, consulta la nostra [guia de col·laboració](com-colaborar.md). (Aquesta pàgina encara està en construcció).
+Aquest és un projecte obert a tothom. Abans de participar, és **essencial** llegir dos documents clau:
+
+1.  **[La nostra Guia de Col·laboració](./com-colaborar.md):** Explica el "com", les eines i la filosofia de treball.
+2.  **[L'Arquitectura del Coneixement](./ARQUITECTURA.md):** Explica el "què", és a dir, les regles sobre com s'estructura la informació (IDs, dependències, etc.).
