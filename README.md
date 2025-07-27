@@ -35,3 +35,4 @@ Aquest és un projecte obert a tothom. Abans de participar, és **essencial** ll
 
 1.  **[La nostra Guia de Col·laboració](./com-colaborar.md):** Explica el "com", les eines i la filosofia de treball.
 2.  **[L'Arquitectura del Coneixement](./ARQUITECTURA.md):** Explica el "què", és a dir, les regles sobre com s'estructura la informació (IDs, dependències, etc.).
+3.  **[Filosofia del projecte](./FILOSOFIA.md)** 
