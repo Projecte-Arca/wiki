@@ -31,8 +31,9 @@ El coneixement s'organitza de manera gradual, des de la supervivència bàsica f
 
 ## Com Col·laborar
 
-Aquest és un projecte obert a tothom. Abans de participar, és **essencial** llegir dos documents clau:
+Aquest és un projecte obert a tothom. Abans de participar, és **essencial** llegir els nostres documents fonamentals:
 
-1.  **[La nostra Guia de Col·laboració](./com-colaborar.md):** Explica el "com", les eines i la filosofia de treball.
-2.  **[L'Arquitectura del Coneixement](./ARQUITECTURA.md):** Explica el "què", és a dir, les regles sobre com s'estructura la informació (IDs, dependències, etc.).
-3.  **[Filosofia del projecte](./FILOSOFIA.md)** 
+1.  **[Filosofia del Projecte](./FILOSOFIA.md):** El "perquè" fem això i el rol de la comunitat.
+2.  **[Principis de Disseny Simbòlic](./DISSENY-SIMBOLIC.md):** Les regles sagrades per dissenyar un llenguatge visual universal.
+3.  **[L'Arquitectura del Coneixement](./ARQUITECTURA.md):** Les regles tècniques sobre l'organització (IDs, dependències, etc.).
+4.  **[Guia de Col·laboració](./com-colaborar.md):** El manual pràctic sobre com utilitzar GitHub per contribuir.
