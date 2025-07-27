@@ -37,7 +37,6 @@ Quan la proposta arribi a un consens, un dels mantenidors del projecte l'aprovar
 
 ## Guia d'Estil per a les Lloses
 
-*   **Llengua de treball:** El català és la llengua principal per a la discussió i redacció inicial dels conceptes.
 *   **Simplicitat:** El contingut ha de ser el més simple i directe possible. Menys és més.
 *   **Format dels pictogrames:** Per als diagrames i pictogrames, el format preferit és **SVG (Scalable Vector Graphics)**.
     *   **Per què SVG?** Perquè és un format vectorial (no perd qualitat en ampliar-se), basat en text (funciona molt bé amb el control de versions de Git) i és un estàndard web obert.
