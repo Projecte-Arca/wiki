@@ -16,18 +16,18 @@ Aquest wiki és l'espai de treball col·laboratiu on dissenyem, debatem i valide
 
 El coneixement s'organitza de manera gradual, des de la supervivència bàsica fins a la ciència més avançada. Fes clic en una secció per explorar les lloses que s'estan desenvolupant:
 
-*   **Secció 01: Supervivència** (Com fer foc, aigua potable, refugi, eines bàsiques)
-*   **Secció 02: Llenguatge Simbòlic** (El diccionari visual per entendre la resta)
-*   **Secció 03: Matemàtiques i Lògica**
-*   **Secció 04: Física**
-*   **Secció 05: Química**
-*   **Secció 06: Biologia i Medicina**
-*   **Secció 07: Computació i Electrònica**
-*   **Secció 08: Enginyeria i Tecnologia**
-*   **Secció 09: Astronomia i Geociències**
-*   **Secció 10: Agricultura i Sostenibilitat**
-*   **Secció 11: Història i Psicologia Humana**
-*   **Secció 12: Filosofia i Ètica**
+*   **[Secció 01: Supervivència](./seccio-01-supervivencia/README.md)** (Com fer foc, aigua potable, refugi, eines bàsiques)
+*   **[Secció 02: Llenguatge Simbòlic](./seccio-02-llenguatge/README.md)** (El diccionari visual per entendre la resta)
+*   **[Secció 03: Matemàtiques i Lògica](./seccio-03-matematiques/README.md)**
+*   **[Secció 04: Física](./seccio-04-fisica/README.md)**
+*   **[Secció 05: Química](./seccio-05-quimica/README.md)**
+*   **[Secció 06: Biologia i Medicina](./seccio-06-biologia/README.md)**
+*   **[Secció 07: Computació i Electrònica](./seccio-07-computacio/README.md)**
+*   **[Secció 08: Enginyeria i Tecnologia](./seccio-08-enginyeria/README.md)**
+*   **[Secció 09: Astronomia i Geociències](./seccio-09-astronomia/README.md)**
+*   **[Secció 10: Agricultura i Sostenibilitat](./seccio-10-agricultura/README.md)**
+*   **[Secció 11: Història i Psicologia Humana](./seccio-11-historia/README.md)**
+*   **[Secció 12: Filosofia i Ètica](./seccio-12-filosofia/README.md)**
 
 ## Com Col·laborar
 
