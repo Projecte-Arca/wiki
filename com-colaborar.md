@@ -1,5 +1,7 @@
 # Com Col·laborar en el Projecte Arca
 
+> **Nota important:** Aquesta guia explica el *procés* de col·laboració. Per entendre les *regles* sobre com s'organitza el coneixement (IDs de les lloses, dependències, etc.), consulta primer el nostre document sobre **[l'Arquitectura del Coneixement](./ARQUITECTURA.md)**.
+
 Gràcies pel teu interès a formar part d'aquest llegat. Cada contribució, per petita que sigui, és un pas més per assegurar que el saber humà perduri. Aquesta guia explica com pots participar-hi de manera efectiva.
 
 ---
