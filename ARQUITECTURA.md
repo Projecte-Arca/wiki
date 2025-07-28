@@ -6,7 +6,7 @@ Aquest document defineix l'estructura fonamental i els protocols que governen l'
 
 Cada llosa té un identificador únic seguint el format jeràrquic: **`SEC.SUB.ID`**.
 
-*   **`SEC` (Secció):** Un número de 01 a 12 que correspon a les categories principals del projecte (01-Supervivència, 02-Llenguatge, etc.).
+*   **`SEC` (Secció):** Un número de 01 a 12 que correspon a les categories principals del projecte (01-Llenguatge, 02-Supervivència, , etc.).
 *   **`SUB` (Subsecció):** Un número que agrupa un tema concret dins d'una secció (p. ex., 03.01 per a Aritmètica dins de Matemàtiques).
 *   **`ID` (Identificador):** Un número seqüencial per a cada llosa dins de la seva subsecció.
 
