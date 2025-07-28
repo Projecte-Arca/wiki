@@ -1,10 +1,10 @@
-# Exemple de Llosa: `00.01.001`
+# Exemple de Llosa: `02.01.001`
 
 Aquesta pàgina és una demostració tècnica de com es visualitzarà una llosa al wiki.
 
 ---
 ### **Metadades de la Llosa**
-*   **ID:** `00.01.001`
+*   **ID:** `02.01.001`
 *   **Títol:** Llosa d'Exemple Tècnic
 *   **Dependències:** Cap
 
