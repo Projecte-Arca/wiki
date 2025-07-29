@@ -27,3 +27,6 @@ Cap llosa o concepte es considera "final" sense passar per un procés rigorós d
 5.  **Aprovació:** Només les propostes que superin aquest escrutini comunitari s'integraran a la versió "oficial" del Llegat.
 
 El Projecte Arca no pertany a qui el va començar, sinó a la humanitat del present que el construeix i a la del futur que, esperem, el rebrà.
+
+
+[Tornar a l'inici](../README.md)
