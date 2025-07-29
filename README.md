@@ -33,8 +33,9 @@ El coneixement s'organitza de manera gradual, des de la supervivència bàsica f
 
 Aquest és un projecte obert a tothom. Abans de participar, és **essencial** llegir els nostres documents fonamentals:
 
-1.  **[Filosofia del Projecte](./FILOSOFIA.md):** El "perquè" fem això i el rol de la comunitat.
-2.  **[Principis de Disseny Simbòlic](./DISSENY-SIMBOLIC.md):** Les regles sagrades per dissenyar un llenguatge visual universal.
-3.  **[L'Arquitectura del Coneixement](./ARQUITECTURA.md):** Les regles tècniques sobre l'organització (IDs, dependències, etc.).
-4.  **[Guia de Col·laboració](./com-colaborar.md):** El manual pràctic sobre com utilitzar GitHub per contribuir.
-5.  **[REPTES](./Reptes.md):** El primer lloc on un nou col·laborador ambiciós vagi a mirar.
+1.  **[La Biblioteca de Símbols](./BIBLIOTECA_SIMBOLS/README.md):** El diccionari visual oficial del nostre llenguatge. Tots els símbols estandarditzats viuen aquí.
+2.  **[Filosofia del Projecte](./FILOSOFIA.md):** El "perquè" fem això i el rol de la comunitat.
+3.  **[Principis de Disseny Simbòlic](./DISSENY-SIMBOLIC.md):** Les regles sagrades per dissenyar un llenguatge visual universal.
+4.  **[L'Arquitectura del Coneixement](./ARQUITECTURA.md):** Les regles tècniques sobre l'organització (IDs, dependències, etc.).
+5.  **[Guia de Col·laboració](./com-colaborar.md):** El manual pràctic sobre com utilitzar GitHub per contribuir.
+6.  **[L'Agenda Oberta: Grans Reptes](./REPTES.md):** El nostre full de ruta col·laboratiu amb les grans preguntes a resoldre.
