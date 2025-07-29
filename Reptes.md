@@ -66,3 +66,5 @@ Un llegat purament informatiu és suficient, o hauríem d'incloure objectes fís
 
 ---
 Aquesta agenda és un document viu. Proposa nous reptes, inicia debats i ajuda a construir les respostes. El futur del projecte depèn de les solucions que trobem junts a aquestes preguntes.
+
+[Tornar a l'inici](../README.md)
