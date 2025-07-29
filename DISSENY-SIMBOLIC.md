@@ -41,4 +41,4 @@ Tots els pictogrames i símbols han de mantenir un **estil visual consistent** a
 ---
 *Aquests principis són la base per a un llenguatge visual robust. Qualsevol debat sobre el disseny d'una llosa hauria de fer referència a aquests punts.*
 
-[Tornar a l'inici](../README.md)
+[Tornar a l'inici](/wiki/)
