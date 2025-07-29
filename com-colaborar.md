@@ -48,4 +48,4 @@ Quan la proposta arribi a un consens, un dels mantenidors del projecte l'aprovar
 
 Formar part d'aquest projecte és ajudar a construir una de les biblioteques més importants mai concebudes. Gràcies per la teva dedicació.
 
-[Tornar a l'inici](../README.md)
+[Tornar a l'inici](/wiki/)
