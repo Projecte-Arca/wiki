@@ -37,4 +37,4 @@ Aquest és un projecte obert a tothom. Abans de participar, és **essencial** ll
 2.  **[Principis de Disseny Simbòlic](./DISSENY-SIMBOLIC.md):** Les regles sagrades per dissenyar un llenguatge visual universal.
 3.  **[L'Arquitectura del Coneixement](./ARQUITECTURA.md):** Les regles tècniques sobre l'organització (IDs, dependències, etc.).
 4.  **[Guia de Col·laboració](./com-colaborar.md):** El manual pràctic sobre com utilitzar GitHub per contribuir.
-5.  **[REPTES](./REPTES.md):** El primer lloc on un nou col·laborador ambiciós vagi a mirar.
+5.  **[REPTES](./Reptes.md):** El primer lloc on un nou col·laborador ambiciós vagi a mirar.
