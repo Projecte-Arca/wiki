@@ -1,16 +1,3 @@
-
-
-Biblioteca de símbols (com dissenyar-la, com mantenir-la, creació i aprovació de símbol, votacions de pictogrames, conceptes, lloses completes, etc. Com organitzar-ho per fer-ho just, amb comunitat i consensuat
-Tamany lloses, profunditat del gravat, tamany pictogrames i mida de la font, quantitat d'informació per llosa, llocs més adients per col·locar-les, nom projecte
-Suport per lloses, objectes adjunts al conjunt de lloses (puntes de fletxa de pedra, engranatges de pedra, pedres xisperes, polígons i poliedres de pedra, etc),
-Separar en dues seccions diferents la lògica de la matemàtica, identificació gravada a la llosa és una bona idea? (com un número de pàgina o similar. idea seria ID o número en binari)
-Calen lloses nque facin de nexe entre seccions? (Fòrmules matemàtiques que es lliguin amb fenòmens o fòrmules de física), lloses de benvinguda (grans pictogrames de salutació i convidant a entrar per a aprendre o similar),
-lloses resum amb fòrmules o taules de pictogrames o símbols, equivalències dependències, etc. 
-Com fer que un pictograma expressi accions amb variacions (indicant passat, present i futur amb una fletxa a sota o condicionals amb algun símbol de més, etc) és a dir que els pictogrames i els símbols es combinin d'una manera
-protocolada i consensuada per tal que no hi hagin confusions ni ambigüitats.
-
-
-
 # L'Agenda Oberta: Grans Reptes del Projecte Arca
 
 Benvingut/da al cor estratègic del Projecte Arca. Aquesta pàgina no conté respostes, sinó les **grans preguntes** que hem de resoldre com a comunitat. És el nostre full de ruta col·laboratiu, un mapa dels territoris que encara hem de conquerir.
