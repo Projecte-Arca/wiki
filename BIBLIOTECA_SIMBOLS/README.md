@@ -16,7 +16,7 @@ El seu compliment és **obligatori** per garantir la coherència i la no-ambigü
 
 La creació d'un nou símbol és una decisió de gran importància i segueix un protocol estricte:
 
-1.  **Proposta:** S'inicia una **[nova "Issue" de Debat/Concepte](https://github.com/Projecte-Arca/wiki/issues/new?template=debat.md&labels=concepte,biblioteca)**. A la proposta s'ha de justificar la necessitat del nou símbol i presentar un o diversos esborranys.
+1.  **Proposta:** S'inicia una **[nova "Issue" de Debat/Concepte](https://github.com/Projecte-Arca/wiki/issues/new?template=debat.md&labels=concepte,biblioteca)**. A la proposta s'ha de justificar la necessitat del nou símbol i presentar un o diversos esborranys. Pots utilitzar el nostre **[Editor de SVG en línia](../../EINES/editor-svg.html)** per crear els teus dissenys.
 2.  **Debat Comunitari:** La comunitat discuteix el disseny, la claredat i les possibles ambigüitats del símbol proposat.
 3.  **Votació:** Si s'arriba a un disseny consensuat, es procedeix a una votació formal per a la seva inclusió.
 4.  **Acceptació:** Si s'aprova, un mantenidor afegirà el símbol a la biblioteca (pujarà l'arxiu SVG a la carpeta corresponent i crearà la seva fitxa a la categoria adient).
