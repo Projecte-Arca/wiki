@@ -37,3 +37,5 @@ El projecte no és un llibre lineal, sinó un **graf de coneixement**. Per enten
 
 ---
 *Aquest document és un document viu i pot ser modificat mitjançant el consens de la comunitat.*
+
+[Tornar a l'inici](../README.md)
