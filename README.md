@@ -39,3 +39,9 @@ Aquest és un projecte obert a tothom. Abans de participar, és **essencial** ll
 4.  **[L'Arquitectura del Coneixement](./ARQUITECTURA.md):** Les regles tècniques sobre l'organització (IDs, dependències, etc.).
 5.  **[Guia de Col·laboració](./com-colaborar.md):** El manual pràctic sobre com utilitzar GitHub per contribuir.
 6.  **[L'Agenda Oberta: Grans Reptes](./REPTES.md):** El nostre full de ruta col·laboratiu amb les grans preguntes a resoldre.
+
+## Eines del Projecte
+
+Per facilitar la col·laboració, hem integrat algunes eines directament al nostre wiki:
+
+*   **[Editor de SVG en línia](./EINES/editor-svg.html):** Utilitza aquesta eina per crear o editar els pictogrames i símbols en format SVG sense necessitat d'instal·lar programari extern.
