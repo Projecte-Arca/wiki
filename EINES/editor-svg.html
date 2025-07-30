@@ -1,52 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="ca">
 <head>
     <meta charset="UTF-8">
     <title>Editor SVG - Projecte Arca</title>
     <style>
-        /* Estils bàsics per assegurar que l'editor ocupi tota la pantalla */
         body, html {
             margin: 0;
             padding: 0;
             height: 100%;
-            overflow: hidden; /* Evita barres de desplaçament innecessàries */
+            overflow: hidden;
+            font-family: sans-serif;
+            background-color: #f0f0f0;
         }
-        #editor_container {
-            width: 100%;
-            height: 100vh; /* Ocupa el 100% de l'alçada de la finestra */
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .editor-header {
+            background-color: #333;
+            color: white;
+            padding: 10px 15px;
+            font-size: 18px;
+        }
+        .editor-header a {
+            color: #8bf;
+            text-decoration: none;
+        }
+        .editor-iframe {
+            flex-grow: 1; /* Fa que l'iframe ocupi tot l'espai restant */
             border: none;
+            width: 100%;
+            height: 100%;
         }
     </style>
-    
-    <!-- Carreguem les dependències de SVG-edit -->
-    <script src="https://unpkg.com/svgedit@7.2.1/dist/jquery.min.js"></script>
-    <script src="https://unpkg.com/svgedit@7.2.1/dist/jquery-ui-dist/jquery-ui.min.js"></script>
-    
-    <!-- Carreguem el nucli de l'aplicació SVG-edit -->
-    <script src="https://unpkg.com/svgedit@7.2.1/dist/svgedit.min.js"></script>
-    
-    <!-- Configuració de l'editor -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Opcions de configuració de SVG-edit
-            const config = {
-                // Pots afegir configuracions personalitzades aquí si cal
-                // Per exemple, per canviar l'idioma per defecte, si la llibreria ho suporta.
-            };
-
-            // Inicialitzem l'editor dins del contenidor 'editor_container'
-            svgedit.embed.setConfig(config);
-            svgedit.embed.setSvgEdit(document.getElementById('editor_container'));
-        });
-    </script>
 </head>
 <body>
-    
-    <h1>Carregant Editor SVG...</h1>
-    <p>Si aquest missatge no desapareix, comprova que tens JavaScript activat.</p>
-    
-    <!-- Aquest és el contenidor on es carregarà l'editor -->
-    <div id="editor_container"></div>
+
+    <div class="editor-container">
+        <header class="editor-header">
+            <span>Editor de Símbols SVG | <strong>Projecte Arca</strong> | <a href="/wiki/">Tornar a l'inici</a></span>
+        </header>
+        
+        <!-- 
+            Aquest iframe carrega la versió oficial de SVG-edit directament.
+            És la solució més estable i segura.
+        -->
+        <iframe
+            class="editor-iframe"
+            src="https://unpkg.com/svgedit@7.2.1/dist/editor/index.html"
+            title="Editor SVG Incorporat">
+        </iframe>
+
+    </div>
 
 </body>
 </html>
