@@ -8,19 +8,17 @@
   <title>Editor SVG Online Avançat</title>
   <style>
     body { display: flex; flex-direction: column; align-items: center; font-family: Arial, sans-serif; margin: 0; padding: 1rem; }
-    #toolbar { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+    #toolbar { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
     #toolbar button, #toolbar input[type=range], label.file-btn {
-      background: #f0f0f0; border: none; padding: 0.5rem; border-radius: 4px; cursor: pointer;
+      background: #f0f0f0; border: none; padding: 1rem; border-radius: 6px; cursor: pointer; font-size: 1.2rem;
     }
     #toolbar button.active { background: #007bff; color: white; }
     #container { display: flex; width: 100%; max-width: 1200px; gap: 1rem; }
-    #editor, #preview { flex: 1; height: 80vh; border: 1px solid #ccc; border-radius: 8px; padding: 0.5rem; box-sizing: border-box; position: relative; overflow: hidden; background: #fff; }
-    textarea { width: 100%; height: 100%; resize: none; font-family: monospace; font-size: 0.9rem; border: none; outline: none; }
-    label.file-btn { background: #28a745; color: white; }
-    label.file-btn:hover { background: #1e7e34; }
+    #editor, #preview { flex: 1; height: 80vh; border: 2px solid #ccc; border-radius: 8px; padding: 0.5rem; box-sizing: border-box; position: relative; overflow: hidden; background: #fff; }
+    textarea { width: 100%; height: 100%; resize: none; font-family: monospace; font-size: 1rem; border: none; outline: none; }
+    label.file-btn { background: #28a745; color: white; font-size: 1.2rem; }
     #preview svg { transform-origin: 0 0; }
-    /* Grid labels */
-    .grid-label { font-size: 10px; fill: #666; }
+    .grid-label { font-size: 12px; fill: #666; pointer-events: none; }
   </style>
 </head>
 <body>
@@ -28,11 +26,11 @@
   <div id="toolbar">
     <button id="tool-pen" title="Dibuix lliure">✍️</button>
     <button id="tool-erase" title="Goma square">🧽</button>
-    <button id="tool-fill" title="Omplir">🪣</button>
+    <button id="tool-fill" title="Omplir">🎨</button>
     <button id="tool-rect" title="Rectangle">▭</button>
     <button id="tool-circle" title="Cercle">⬤</button>
     <button id="tool-line" title="Línia">─</button>
-    <input type="range" id="strokeWidth" min="5" max="50" value="20" title="Goma/Traç amplada">
+    <input type="range" id="strokeWidth" min="5" max="50" value="20" title="Amplada goma/traç">
     <button id="toggleGrid" title="Activa/desactiva graella">#</button>
     <input type="range" id="zoom" min="0.5" max="4" step="0.1" value="1" title="Zoom">
     <button id="clearAll" title="Neteja tot">🗑️</button>
@@ -60,26 +58,21 @@
     const clearAllBtn = document.getElementById('clearAll');
 
     let currentTool = 'pen';
-    let svgEl, drawing=false, startX=0, startY=0, currentEl=null, pathData='';
+    let svgEl, drawing=false, startX=0, startY=0, currentEl=null, pathData='', isPanning=false;
     let gridOn = false;
     let eraseBox=null;
+    let panX=0, panY=0;
 
-    // Initialize tool buttons
     document.querySelectorAll('#toolbar button').forEach(btn=>{
-      if (btn.id.startsWith('tool-')){
-        btn.addEventListener('click', ()=>{
-          document.querySelectorAll('#toolbar button').forEach(b=>b.classList.remove('active'));
-          btn.classList.add('active');
-          currentTool = btn.id.replace('tool-','');
-        });
-      }
+      if (btn.id.startsWith('tool-')) btn.addEventListener('click', ()=>{
+        document.querySelectorAll('#toolbar button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active'); currentTool = btn.id.replace('tool-','');
+      });
     });
     document.getElementById('tool-pen').click();
 
     function ensureSVG(code){
-      if (!code.includes('<svg')){
-        return `<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"800\" height=\"600\"><defs></defs></svg>`;
-      }
+      if (!code.includes('<svg')) return `<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"800\" height=\"600\"><defs></defs></svg>`;
       return code;
     }
 
@@ -87,111 +80,139 @@
       code = ensureSVG(code);
       preview.innerHTML = code;
       svgEl = preview.querySelector('svg');
-      initDraw(); applyGrid(); applyZoom();
+      initDraw(); applyGrid(); applyTransform();
     }
 
     function initDraw(){
-      // Remove old listeners
       svgEl.replaceWith(svgEl.cloneNode(true));
       svgEl = preview.querySelector('svg');
       svgEl.style.cursor = 'crosshair';
-      ['mousedown','mousemove','mouseup'].forEach(evt=>{
-        svgEl.addEventListener(evt, window['on'+evt.charAt(0).toUpperCase()+evt.slice(1)]);
-      });
+      ['mousedown','mousemove','mouseup','wheel'].forEach(evt=>svgEl.addEventListener(evt, window['on'+evt.charAt(0).toUpperCase()+evt.slice(1)]));
     }
 
-    function getPoint(e){ return {x: e.offsetX, y: e.offsetY}; }
+    function getPoint(e){ return {x: (e.offsetX - panX)/zoomInput.value, y: (e.offsetY - panY)/zoomInput.value, button: e.button}; }
 
-    function onMousedown(e){ if(e.button!==0) return; // only left
-      const p=getPoint(e); startX=p.x; startY=p.y;
-      drawing = ['pen','erase'].includes(currentTool);
+    function onMousedown(e){ const {button, x, y} = getPoint(e);
+      if (button===1){ isPanning=true; startX=e.clientX; startY=e.clientY; return; }
+      if (button!==0) return;
+      drawing=true; currentEl=null;
       const sw = parseInt(strokeWidthInput.value,10);
-      if (!drawing) drawing=true;
       switch(currentTool){
-        case 'rect': createShape('rect'); break;
-        case 'circle': createShape('circle'); break;
-        case 'line': createShape('line', e.ctrlKey); break;
-        case 'pen': createPath(false); break;
-        case 'erase': startEraseBox(sw); break;
-        case 'fill': applyFill(e); drawing=false; break;
+        case 'rect': createShape('rect', x, y); break;
+        case 'circle': createShape('circle', x, y); break;
+        case 'line': createShape('line', x, y, e.ctrlKey); break;
+        case 'pen': createPath(x,y); break;
+        case 'erase': startEraseBox(x,y,sw); break;
+        case 'fill': applyFill(x,y); drawing=false; break;
       }
       editor.value = svgEl.outerHTML;
     }
 
-    function onMousemove(e){ if(!drawing) return;
-      const p=getPoint(e); const dx=p.x-startX, dy=p.y-startY;
+    function onMousemove(e){ if(isPanning){ panX += e.clientX - startX; panY += e.clientY - startY; startX = e.clientX; startY = e.clientY; applyTransform(); return; }
+      if (!drawing) return; const {x, y} = getPoint(e);
       switch(currentTool){
-        case 'rect': updateRect(dx,dy); break;
-        case 'circle': updateCircle(dx,dy); break;
-        case 'line': updateLine(dx,dy,e.ctrlKey); break;
-        case 'pen': updatePath(p); break;
-        case 'erase': updateEraseBox(p); break;
+        case 'rect': updateRect(x,y); break;
+        case 'circle': updateCircle(x,y); break;
+        case 'line': updateLine(x,y,e.ctrlKey); break;
+        case 'pen': updatePath(x,y); break;
+        case 'erase': updateEraseBox(x,y); break;
       }
       editor.value = svgEl.outerHTML;
     }
 
-    function onMouseup(e){ if(e.button!==0) return; if(currentTool==='erase') finishErase(); drawing=false; currentEl=null; }
+    function onMouseup(e){ const {button} = getPoint(e);
+      if (button===1) { isPanning=false; return; }
+      if (button!==0) return;
+      if (currentTool==='erase') finishErase();
+      drawing=false; currentEl=null;
+    }
 
-    // Shape tools
-    function createShape(type, ctrl=false){ currentEl=document.createElementNS(svgEl.namespaceURI,type);
-      switch(type){
-        case 'rect': currentEl.setAttribute('x',startX); currentEl.setAttribute('y',startY); currentEl.setAttribute('fill','none'); break;
-        case 'circle': currentEl.setAttribute('cx',startX); currentEl.setAttribute('cy',startY); currentEl.setAttribute('fill','none'); break;
-        case 'line': currentEl.setAttribute('x1',startX); currentEl.setAttribute('y1',startY); currentEl.setAttribute('x2',startX); currentEl.setAttribute('y2',startY); break;
-      }
-      setShapeStyle(type);
+    function onWheel(e){ e.preventDefault(); if(e.ctrlKey) return; const delta = -e.deltaY/500;
+      const newZoom = Math.min(4, Math.max(0.5, parseFloat(zoomInput.value) + delta)); zoomInput.value = newZoom; applyTransform(); }
+
+    function createShape(type,x,y){ currentEl=document.createElementNS(svgEl.namespaceURI,type);
+      if(type==='rect'){ currentEl.setAttribute('x',x); currentEl.setAttribute('y',y); }
+      if(type==='circle'){ currentEl.setAttribute('cx',x); currentEl.setAttribute('cy',y); }
+      if(type==='line'){ currentEl.setAttribute('x1',x); currentEl.setAttribute('y1',y); currentEl.setAttribute('x2',x); currentEl.setAttribute('y2',y); }
+      setShapeStyle(currentEl);
       svgEl.appendChild(currentEl);
     }
-    function updateRect(dx,dy){ currentEl.setAttribute('width',Math.abs(dx)); currentEl.setAttribute('height',Math.abs(dy)); currentEl.setAttribute('x', dx<0? startX+dx:startX); currentEl.setAttribute('y', dy<0? startY+dy:startY); }
-    function updateCircle(dx,dy){ currentEl.setAttribute('r',Math.sqrt(dx*dx+dy*dy)); }
-    function updateLine(dx,dy,ctrl){ if(ctrl){ if(Math.abs(dx)>Math.abs(dy)) dy=0; else dx=0; } currentEl.setAttribute('x2',startX+dx); currentEl.setAttribute('y2',startY+dy); }
-    function setShapeStyle(type){ currentEl.setAttribute('stroke','black'); currentEl.setAttribute('stroke-width',2); if(type!=='line') currentEl.setAttribute('fill','none'); }
-
-    // Freehand draw
-    function createPath(){ currentEl=document.createElementNS(svgEl.namespaceURI,'path'); pathData=`M${startX},${startY}`; currentEl.setAttribute('d',pathData); currentEl.setAttribute('stroke','black'); currentEl.setAttribute('stroke-width',2); currentEl.setAttribute('fill','none'); svgEl.appendChild(currentEl); }
-    function updatePath(p){ pathData+=` L${p.x},${p.y}`; currentEl.setAttribute('d',pathData); }
-
-    // Erase square tool
-    function startEraseBox(size){ eraseBox=document.createElementNS(svgEl.namespaceURI,'rect'); eraseBox.setAttribute('width',size); eraseBox.setAttribute('height',size); eraseBox.setAttribute('fill','rgba(255,255,255,0.5)'); eraseBox.setAttribute('stroke','red'); eraseBox.setAttribute('stroke-width',1); svgEl.appendChild(eraseBox); }
-    function updateEraseBox(p){ const size=parseInt(strokeWidthInput.value,10); const x=p.x-size/2, y=p.y-size/2; eraseBox.setAttribute('x',x); eraseBox.setAttribute('y',y); }
-    function finishErase(){ const x=parseFloat(eraseBox.getAttribute('x')), y=parseFloat(eraseBox.getAttribute('y')); const w=parseFloat(eraseBox.getAttribute('width')), h=parseFloat(eraseBox.getAttribute('height')); eraseBox.remove();
-      [...svgEl.children].filter(el=>!['defs','gridRect'].includes(el.id)).forEach(el=>{
-        const bb=el.getBBox(); if(bb.x>=x && bb.y>=y && bb.x+bb.width<=x+w && bb.y+bb.height<=y+h) el.remove();
-      }); eraseBox=null; editor.value=svgEl.outerHTML; }
-
-    // Fill tool
-    function applyFill(e){ const target=e.target; if(target.tagName!=='svg' && target.id!=='gridRect' && target.tagName!=='defs') target.setAttribute('fill','black'); }
-
-    // Grid with labels
-    function applyGrid(){ const existing=svgEl.querySelector('#gridRect'); if(gridOn && !existing){ const defs=svgEl.querySelector('defs');
-        const size=20; const pat=document.createElementNS(svgEl.namespaceURI,'pattern'); pat.setAttribute('id','gridPattern'); pat.setAttribute('width',size); pat.setAttribute('height',size); pat.setAttribute('patternUnits','userSpaceOnUse'); const path= document.createElementNS(svgEl.namespaceURI,'path'); path.setAttribute('d',`M${size} 0 L0 0 0 ${size}`); path.setAttribute('stroke','#ccc'); path.setAttribute('stroke-width','0.5'); path.setAttribute('fill','none'); pat.appendChild(path); defs.appendChild(pat);
-        const grd=document.createElementNS(svgEl.namespaceURI,'rect'); grd.setAttribute('id','gridRect'); grd.setAttribute('width',svgEl.getAttribute('width')); grd.setAttribute('height',svgEl.getAttribute('height')); grd.setAttribute('fill','url(#gridPattern)'); svgEl.insertBefore(grd, svgEl.firstChild);
-        // labels
-        const w=parseInt(svgEl.getAttribute('width'),10), h=parseInt(svgEl.getAttribute('height'),10);
-        for(let x=0;x<=w;x+=size){ const txt=document.createElementNS(svgEl.namespaceURI,'text'); txt.setAttribute('x',x+2); txt.setAttribute('y',10); txt.setAttribute('class','grid-label'); txt.textContent=x; svgEl.appendChild(txt);}        
-        for(let y=0;y<=h;y+=size){ const txt=document.createElementNS(svgEl.namespaceURI,'text'); txt.setAttribute('x',2); txt.setAttribute('y',y-2); txt.setAttribute('class','grid-label'); txt.textContent=y; svgEl.appendChild(txt);}      
-      } else if(!gridOn && existing){ [...svgEl.querySelectorAll('.grid-label')].forEach(l=>l.remove()); existing.remove(); }
+    function updateRect(x,y){ const w=x-parseFloat(currentEl.getAttribute('x')), h=y-parseFloat(currentEl.getAttribute('y'));
+      currentEl.setAttribute('width',Math.abs(w)); currentEl.setAttribute('height',Math.abs(h)); if(w<0) currentEl.setAttribute('x',x); if(h<0) currentEl.setAttribute('y',y);
     }
-    toggleGridBtn.addEventListener('click', ()=>{ gridOn=!gridOn; loadSVG(editor.value); });
+    function updateCircle(x,y){ const cx=parseFloat(currentEl.getAttribute('cx')), cy=parseFloat(currentEl.getAttribute('cy'));
+      currentEl.setAttribute('r',Math.hypot(x-cx,y-cy)); }
+    function updateLine(x,y,ctrl){ let x2=x,y2=y; if(ctrl){ const dx=x2-parseFloat(currentEl.getAttribute('x1')), dy=y2-parseFloat(currentEl.getAttribute('y1'));
+        if(Math.abs(dx)>Math.abs(dy)) y2=currentEl.getAttribute('y1'); else x2=currentEl.getAttribute('x1'); }
+      currentEl.setAttribute('x2',x2); currentEl.setAttribute('y2',y2);
+    }
+    function setShapeStyle(el){ el.setAttribute('stroke','black'); el.setAttribute('stroke-width',2);
+      if(el.tagName!=='line') el.setAttribute('fill','none'); el.setAttribute('pointer-events','all'); }
 
-    // Clear All
-    clearAllBtn.addEventListener('click', ()=>{
-      const w=svgEl.getAttribute('width'), h=svgEl.getAttribute('height'); const defs=svgEl.querySelector('defs'); svgEl.innerHTML=''; const newSVG=`<defs></defs>`; svgEl.innerHTML=newSVG;
-      if(gridOn) applyGrid(); editor.value=svgEl.outerHTML;
+    function createPath(x,y){ currentEl=document.createElementNS(svgEl.namespaceURI,'path'); pathData=`M${x},${y}`;
+      currentEl.setAttribute('d',pathData); currentEl.setAttribute('stroke','black'); currentEl.setAttribute('stroke-width',2);
+      currentEl.setAttribute('fill','none'); currentEl.setAttribute('pointer-events','all'); svgEl.appendChild(currentEl);
+    }
+    function updatePath(x,y){ pathData+=` L${x},${y}`; currentEl.setAttribute('d',pathData); }
+
+    function startEraseBox(x,y,size){ eraseBox=document.createElementNS(svgEl.namespaceURI,'rect');
+      eraseBox.setAttribute('width',size); eraseBox.setAttribute('height',size);
+      eraseBox.setAttribute('x',x-size/2); eraseBox.setAttribute('y',y-size/2);
+      eraseBox.setAttribute('fill','rgba(255,255,255,0.5)'); eraseBox.setAttribute('stroke','red'); eraseBox.setAttribute('stroke-width',1);
+      svgEl.appendChild(eraseBox);
+    }
+    function updateEraseBox(x,y){ const size=parseInt(strokeWidthInput.value,10);
+      eraseBox.setAttribute('x',x-size/2); eraseBox.setAttribute('y',y-size/2);
+    }
+    function finishErase(){ const x=parseFloat(eraseBox.getAttribute('x')), y=parseFloat(eraseBox.getAttribute('y'));
+      const w=parseFloat(eraseBox.getAttribute('width')), h=parseFloat(eraseBox.getAttribute('height')); eraseBox.remove();
+      [...svgEl.querySelectorAll('rect, circle, line, path')].forEach(el=>{
+        if(el.id==='gridRect'||el.parentNode.tagName==='defs') return; const bb=el.getBBox();
+        if(bb.x>=x&&bb.y>=y&&bb.x+bb.width<=x+w&&bb.y+bb.height<=y+h) el.remove();
+      }); eraseBox=null; editor.value=svgEl.outerHTML;
+    }
+
+    function applyFill(px,py){ const rect=svgEl.createSVGRect(); rect.x=px; rect.y=py; rect.width=1; rect.height=1;
+      const hits=svgEl.getIntersectionList(rect, svgEl);
+      if(hits.length){ const target=hits[hits.length-1]; if(target.tagName.match(/^(rect|circle|path|line)$/i)){
+          target.setAttribute('fill','black'); editor.value=svgEl.outerHTML;
+        }
+      }
+    }
+
+    function applyGrid(){ const existing=svgEl.querySelector('#gridRect'), size=20;
+      if(gridOn && !existing){ const defs=svgEl.querySelector('defs'); const pat=document.createElementNS(svgEl.namespaceURI,'pattern');
+        pat.setAttribute('id','gridPattern'); pat.setAttribute('width',size); pat.setAttribute('height',size);
+        pat.setAttribute('patternUnits','userSpaceOnUse'); const path=document.createElementNS(svgEl.namespaceURI,'path');
+        path.setAttribute('d',`M${size} 0 L0 0 0 ${size}`); path.setAttribute('stroke','#ccc');
+        path.setAttribute('stroke-width','0.5'); path.setAttribute('fill','none'); pat.appendChild(path); defs.appendChild(pat);
+        const grd=document.createElementNS(svgEl.namespaceURI,'rect');
+        grd.setAttribute('id','gridRect'); grd.setAttribute('width',svgEl.getAttribute('width'));
+        grd.setAttribute('height',svgEl.getAttribute('height')); grd.setAttribute('fill','url(#gridPattern)');
+        svgEl.insertBefore(grd,svgEl.firstChild);
+        for(let x=0;x<=svgEl.getAttribute('width');x+=size){ const txt=document.createElementNS(svgEl.namespaceURI,'text');
+          txt.setAttribute('x',x+2); txt.setAttribute('y',12); txt.setAttribute('class','grid-label'); txt.textContent=x; svgEl.appendChild(txt);
+        }
+        for(let y=0;y<=svgEl.getAttribute('height');y+=size){ const txt=document.createElementNS(svgEl.namespaceURI,'text');
+          txt.setAttribute('x',2); txt.setAttribute('y',y-2); txt.setAttribute('class','grid-label'); txt.textContent=y; svgEl.appendChild(txt);
+        }
+      } else if(!gridOn && existing){ existing.remove(); svgEl.querySelectorAll('.grid-label').forEach(l=>l.remove()); }
+    }
+    toggleGridBtn.addEventListener('click',()=>{ gridOn=!gridOn; loadSVG(editor.value); });
+
+    clearAllBtn.addEventListener('click',()=>{ svgEl.innerHTML=`<defs></defs>`; if(gridOn) applyGrid(); editor.value=svgEl.outerHTML; });
+
+    function applyTransform(){ svgEl.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomInput.value})`; }
+    zoomInput.addEventListener('input', applyTransform);
+
+    downloadBtn.addEventListener('click',()=>{ const blob=new Blob([svgEl.outerHTML],{type:'image/svg+xml'}); const url=URL.createObjectURL(blob);
+      const a=document.createElement('a'); a.href=url; a.download='disseny.svg'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     });
-
-    // Zoom
-    function applyZoom(){ svgEl.style.transform=`scale(${zoomInput.value})`; }
-    zoomInput.addEventListener('input', applyZoom);
-
-    // Download & Load
-    downloadBtn.addEventListener('click', ()=>{ const blob=new Blob([svgEl.outerHTML],{type:'image/svg+xml'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='disseny.svg'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); });
-    fileInput.addEventListener('change', e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ editor.value=r.result; loadSVG(r.result); }; r.readAsText(f); });
+    fileInput.addEventListener('change',e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ editor.value=r.result; loadSVG(r.result); }; r.readAsText(f); });
 
     loadSVG(editor.value);
   </script>
 </body>
 </html>
-
 
 
