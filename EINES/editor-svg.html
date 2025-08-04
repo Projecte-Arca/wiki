@@ -5,171 +5,156 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Editor SVG Online</title>
+  <title>Editor SVG Online Avançat</title>
   <style>
     body { display: flex; flex-direction: column; align-items: center; font-family: Arial, sans-serif; margin: 0; padding: 1rem; }
-    #container { display: flex; width: 100%; max-width: 1200px; margin-top: 1rem; gap: 1rem; }
+    #toolbar { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
+    #toolbar button, #toolbar input[type=range], #toolbar input[type=color], label.file-btn {
+      background: #f0f0f0; border: none; padding: 0.5rem; border-radius: 4px; cursor: pointer;
+    }
+    #toolbar button.active { background: #007bff; color: white; }
+    #container { display: flex; width: 100%; max-width: 1200px; gap: 1rem; }
     #editor, #preview { flex: 1; height: 80vh; border: 1px solid #ccc; border-radius: 8px; padding: 0.5rem; box-sizing: border-box; position: relative; }
-    #editor { display: flex; flex-direction: column; }
-    textarea { flex: 1; width: 100%; resize: none; font-family: monospace; font-size: 0.9rem; border: none; outline: none; }
-    #controls { margin-bottom: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
-    button, select, label.file-btn { padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; }
-    button { background: #007bff; color: white; }
-    button:hover { background: #0056b3; }
-    select { background: #f0f0f0; }
-    .file-btn { background: #28a745; color: white; }
-    .file-btn:hover { background: #1e7e34; }
-    #preview svg { width: 100%; height: 100%; }
+    textarea { width: 100%; height: 100%; resize: none; font-family: monospace; font-size: 0.9rem; border: none; outline: none; }
+    label.file-btn { background: #28a745; color: white; }
+    label.file-btn:hover { background: #1e7e34; }
   </style>
 </head>
 <body>
-  <h1>Editor SVG Online amb Dibuix</h1>
-  <div id="controls">
-    <select id="shapeSelector">
-      <option value="none">Selecciona forma...</option>
-      <option value="rect">Rectangle</option>
-      <option value="circle">Cercle</option>
-      <option value="line">Línia</option>
-    </select>
-    <button id="renderBtn">Render</button>
-    <button id="downloadBtn">Descarrega SVG</button>
-    <label for="fileInput" class="file-btn">Carrega SVG</label>
+  <h1>Editor SVG Online Avançat</h1>
+  <div id="toolbar">
+    <button id="tool-select" title="Select/Eraser">✎</button>
+    <button id="tool-rect" title="Rectangle">▭</button>
+    <button id="tool-circle" title="Circle">⬤</button>
+    <button id="tool-line" title="Line">─</button>
+    <button id="tool-pen" title="Freehand">✍</button>
+    <input type="range" id="strokeWidth" min="1" max="10" value="2" title="Stroke Width">
+    <input type="color" id="strokeColor" value="#000000" title="Stroke Color">
+    <button id="renderBtn" title="Render">🔄</button>
+    <button id="downloadBtn" title="Download SVG">💾</button>
+    <label for="fileInput" class="file-btn" title="Load SVG">📂</label>
     <input type="file" id="fileInput" accept="image/svg+xml">
   </div>
   <div id="container">
     <div id="editor">
-      <textarea id="svgEditor" placeholder="Escriu codi SVG...">&lt;svg xmlns=\"http://www.w3.org/2000/svg\" width=\"600\" height=\"400\"&gt;
-  &lt;!-- Dibuixa aquí --&gt;
+      <textarea id="svgEditor">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;800&quot; height=&quot;600&quot;&gt;
 &lt;/svg&gt;</textarea>
     </div>
-    <div id="preview">
-      <!-- Preview amb possibilitat de dibuixar -->
-    </div>
+    <div id="preview"></div>
   </div>
 
   <script>
     const editor = document.getElementById('svgEditor');
     const preview = document.getElementById('preview');
+    const fileInput = document.getElementById('fileInput');
     const renderBtn = document.getElementById('renderBtn');
     const downloadBtn = document.getElementById('downloadBtn');
-    const fileInput = document.getElementById('fileInput');
-    const shapeSelector = document.getElementById('shapeSelector');
+    const strokeWidthInput = document.getElementById('strokeWidth');
+    const strokeColorInput = document.getElementById('strokeColor');
 
-    let svgElement = null;
-    let drawing = false;
-    let startX = 0, startY = 0;
-    let currentShape = null;
+    let currentTool = 'select';
+    let svgEl, drawing=false, startX=0, startY=0, currentEl=null, pathData='';
 
-    function renderSVG() {
-      const code = editor.value;
+    // Tool buttons
+    document.querySelectorAll('#toolbar button').forEach(btn=>{
+      if (btn.id.startsWith('tool-')){
+        btn.addEventListener('click', ()=>{
+          document.querySelectorAll('#toolbar button').forEach(b=>b.classList.remove('active'));
+          btn.classList.add('active');
+          currentTool = btn.id.replace('tool-','');
+        });
+      }
+    });
+    document.getElementById('tool-select').click(); // default
+
+    function loadSVG(code){
       preview.innerHTML = code;
-      svgElement = preview.querySelector('svg');
-      if (svgElement) setupDrawing();
+      svgEl = preview.querySelector('svg');
+      if (svgEl) initDraw();
     }
 
-    function setupDrawing() {
-      svgElement.style.cursor = 'crosshair';
-      svgElement.addEventListener('mousedown', onMouseDown);
-      svgElement.addEventListener('mousemove', onMouseMove);
-      svgElement.addEventListener('mouseup', onMouseUp);
+    function initDraw(){
+      svgEl.style.cursor = 'crosshair';
+      ['mousedown','mousemove','mouseup'].forEach(evt => svgEl.addEventListener(evt, window['on'+evt.charAt(0).toUpperCase()+evt.slice(1)]));
     }
 
-    function onMouseDown(e) {
-      const shape = shapeSelector.value;
-      if (shape === 'none') return;
-      drawing = true;
-      const pt = svgElement.createSVGPoint();
-      pt.x = e.offsetX;
-      pt.y = e.offsetY;
-      startX = pt.x;
-      startY = pt.y;
-      // crea element
-      if (shape === 'rect') {
-        currentShape = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        currentShape.setAttribute('x', startX);
-        currentShape.setAttribute('y', startY);
-        currentShape.setAttribute('width', 0);
-        currentShape.setAttribute('height', 0);
-        currentShape.setAttribute('fill', 'transparent');
-        currentShape.setAttribute('stroke', 'black');
-      } else if (shape === 'circle') {
-        currentShape = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        currentShape.setAttribute('cx', startX);
-        currentShape.setAttribute('cy', startY);
-        currentShape.setAttribute('r', 0);
-        currentShape.setAttribute('fill', 'transparent');
-        currentShape.setAttribute('stroke', 'black');
-      } else if (shape === 'line') {
-        currentShape = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        currentShape.setAttribute('x1', startX);
-        currentShape.setAttribute('y1', startY);
-        currentShape.setAttribute('x2', startX);
-        currentShape.setAttribute('y2', startY);
-        currentShape.setAttribute('stroke', 'black');
-      }
-      svgElement.appendChild(currentShape);
-    }
+    function getPoint(e){ const p=svgEl.createSVGPoint(); p.x=e.offsetX; p.y=e.offsetY; return p; }
 
-    function onMouseMove(e) {
-      if (!drawing || !currentShape) return;
-      const pt = svgElement.createSVGPoint();
-      pt.x = e.offsetX;
-      pt.y = e.offsetY;
-      const dx = pt.x - startX;
-      const dy = pt.y - startY;
-      const shape = shapeSelector.value;
-      if (shape === 'rect') {
-        currentShape.setAttribute('width', Math.abs(dx));
-        currentShape.setAttribute('height', Math.abs(dy));
-        currentShape.setAttribute('x', dx < 0 ? pt.x : startX);
-        currentShape.setAttribute('y', dy < 0 ? pt.y : startY);
-      } else if (shape === 'circle') {
-        const r = Math.sqrt(dx * dx + dy * dy);
-        currentShape.setAttribute('r', r);
-      } else if (shape === 'line') {
-        currentShape.setAttribute('x2', pt.x);
-        currentShape.setAttribute('y2', pt.y);
+    function onMousedown(e){
+      const p = getPoint(e);
+      startX=p.x; startY=p.y;
+      drawing=true;
+      const sw = strokeWidthInput.value;
+      const sc = strokeColorInput.value;
+      if (currentTool==='rect'){ currentEl=document.createElementNS(svgEl.namespaceURI,'rect');
+        currentEl.setAttribute('x',startX); currentEl.setAttribute('y',startY);
+        currentEl.setAttribute('width',0); currentEl.setAttribute('height',0);
+        currentEl.setAttribute('stroke-width',sw); currentEl.setAttribute('stroke',sc);
+        currentEl.setAttribute('fill','transparent'); svgEl.appendChild(currentEl);
+      } else if (currentTool==='circle'){ currentEl=document.createElementNS(svgEl.namespaceURI,'circle');
+        currentEl.setAttribute('cx',startX); currentEl.setAttribute('cy',startY);
+        currentEl.setAttribute('r',0); currentEl.setAttribute('stroke-width',sw);
+        currentEl.setAttribute('stroke',sc); currentEl.setAttribute('fill','transparent'); svgEl.appendChild(currentEl);
+      } else if (currentTool==='line' || currentTool==='pen'){ 
+        if (currentTool==='line'){
+          currentEl=document.createElementNS(svgEl.namespaceURI,'line');
+          currentEl.setAttribute('x1',startX); currentEl.setAttribute('y1',startY);
+          currentEl.setAttribute('x2',startX); currentEl.setAttribute('y2',startY);
+        } else {
+          currentEl=document.createElementNS(svgEl.namespaceURI,'path'); pathData=`M${startX},${startY}`;
+          currentEl.setAttribute('d',pathData);
+        }
+        currentEl.setAttribute('stroke-width',sw); currentEl.setAttribute('stroke',sc);
+        currentEl.setAttribute('fill','none'); svgEl.appendChild(currentEl);
+      } else if (currentTool==='select'){ currentEl=document.createElementNS(svgEl.namespaceURI,'rect');
+        currentEl.setAttribute('x',startX); currentEl.setAttribute('y',startY);
+        currentEl.setAttribute('width',0); currentEl.setAttribute('height',0);
+        currentEl.setAttribute('fill','rgba(0,0,255,0.1)'); currentEl.setAttribute('stroke','blue');
+        svgEl.appendChild(currentEl);
       }
     }
-
-    function onMouseUp() {
-      if (drawing) {
-        drawing = false;
-        currentShape = null;
-        // actualitza el codi
-        editor.value = svgElement.outerHTML;
+    function onMousemove(e){ if(!drawing||!currentEl) return; const p=getPoint(e);
+      let dx=p.x-startX, dy=p.y-startY;
+      if (currentTool==='rect' || currentTool==='select'){
+        currentEl.setAttribute('x', dx<0? p.x: startX);
+        currentEl.setAttribute('y', dy<0? p.y: startY);
+        currentEl.setAttribute('width', Math.abs(dx));
+        currentEl.setAttribute('height', Math.abs(dy));
+      } else if (currentTool==='circle'){
+        currentEl.setAttribute('r', Math.sqrt(dx*dx+dy*dy));
+      } else if (currentTool==='line'){
+        if (e.ctrlKey){ if (Math.abs(dx)>Math.abs(dy)) dy=0; else dx=0; }
+        currentEl.setAttribute('x2', startX+dx);
+        currentEl.setAttribute('y2', startY+dy);
+      } else if (currentTool==='pen'){
+        pathData+=` L${p.x},${p.y}`;
+        currentEl.setAttribute('d',pathData);
       }
     }
+    function onMouseup(e){ if(!drawing) return; drawing=false;
+      if(currentTool==='select'){
+        const sel = currentEl.getBBox(); svgEl.removeChild(currentEl);
+        // elimina elements dins
+        [...svgEl.children].forEach(el=>{
+          if (el===currentEl) return;
+          const bb=el.getBBox();
+          if (bb.x>=sel.x && bb.y>=sel.y && bb.x+bb.width<=sel.x+sel.width && bb.y+bb.height<=sel.y+sel.height){ svgEl.removeChild(el); }
+        });
+      }
+      currentEl=null; editor.value=svgEl.outerHTML;
+    }
 
-    renderBtn.addEventListener('click', renderSVG);
-    editor.addEventListener('input', renderSVG);
-
-    downloadBtn.addEventListener('click', () => {
-      const svgCode = editor.value;
-      const blob = new Blob([svgCode], { type: 'image/svg+xml' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'disseny.svg';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+    renderBtn.addEventListener('click', ()=>loadSVG(editor.value));
+    editor.addEventListener('input', ()=>loadSVG(editor.value));
+    downloadBtn.addEventListener('click', ()=>{
+      const blob=new Blob([editor.value],{type:'image/svg+xml'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a'); a.href=url; a.download='disseny.svg'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     });
+    fileInput.addEventListener('change', e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ editor.value=r.result; loadSVG(r.result); }; r.readAsText(f); });
 
-    fileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        editor.value = reader.result;
-        renderSVG();
-      };
-      reader.readAsText(file);
-    });
-
-    // Render inicial
-    renderSVG();
+    // inicial
+    loadSVG(editor.value);
   </script>
 </body>
 </html>
