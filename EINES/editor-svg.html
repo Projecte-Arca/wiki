@@ -9,21 +9,28 @@
   <style>
     body { display: flex; flex-direction: column; align-items: center; font-family: Arial, sans-serif; margin: 0; padding: 1rem; }
     #container { display: flex; width: 100%; max-width: 1200px; margin-top: 1rem; gap: 1rem; }
-    #editor, #preview { flex: 1; height: 80vh; border: 1px solid #ccc; border-radius: 8px; padding: 0.5rem; box-sizing: border-box; }
+    #editor, #preview { flex: 1; height: 80vh; border: 1px solid #ccc; border-radius: 8px; padding: 0.5rem; box-sizing: border-box; position: relative; }
     #editor { display: flex; flex-direction: column; }
     textarea { flex: 1; width: 100%; resize: none; font-family: monospace; font-size: 0.9rem; border: none; outline: none; }
-    #controls { margin-bottom: 0.5rem; display: flex; gap: 0.5rem; }
-    button { padding: 0.5rem 1rem; border: none; border-radius: 4px; background: #007bff; color: white; cursor: pointer; }
+    #controls { margin-bottom: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    button, select, label.file-btn { padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; }
+    button { background: #007bff; color: white; }
     button:hover { background: #0056b3; }
+    select { background: #f0f0f0; }
+    .file-btn { background: #28a745; color: white; }
+    .file-btn:hover { background: #1e7e34; }
     #preview svg { width: 100%; height: 100%; }
-    input[type=file] { display: none; }
-    label.file-btn { padding: 0.5rem 1rem; background: #28a745; color: white; border-radius: 4px; cursor: pointer; }
-    label.file-btn:hover { background: #1e7e34; }
   </style>
 </head>
 <body>
-  <h1>Editor SVG Online</h1>
+  <h1>Editor SVG Online amb Dibuix</h1>
   <div id="controls">
+    <select id="shapeSelector">
+      <option value="none">Selecciona forma...</option>
+      <option value="rect">Rectangle</option>
+      <option value="circle">Cercle</option>
+      <option value="line">Línia</option>
+    </select>
     <button id="renderBtn">Render</button>
     <button id="downloadBtn">Descarrega SVG</button>
     <label for="fileInput" class="file-btn">Carrega SVG</label>
@@ -31,12 +38,12 @@
   </div>
   <div id="container">
     <div id="editor">
-      <textarea id="svgEditor" placeholder="Aquí pots escriure o enganxar codi SVG...">&lt;svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"200\"&gt;
-  &lt;circle cx=\"100\" cy=\"100\" r=\"80\" fill=\"#f39c12\" /&gt;
+      <textarea id="svgEditor" placeholder="Escriu codi SVG...">&lt;svg xmlns=\"http://www.w3.org/2000/svg\" width=\"600\" height=\"400\"&gt;
+  &lt;!-- Dibuixa aquí --&gt;
 &lt;/svg&gt;</textarea>
     </div>
     <div id="preview">
-      <!-- El SVG renderitzat apareixerà aquí -->
+      <!-- Preview amb possibilitat de dibuixar -->
     </div>
   </div>
 
@@ -46,17 +53,96 @@
     const renderBtn = document.getElementById('renderBtn');
     const downloadBtn = document.getElementById('downloadBtn');
     const fileInput = document.getElementById('fileInput');
+    const shapeSelector = document.getElementById('shapeSelector');
+
+    let svgElement = null;
+    let drawing = false;
+    let startX = 0, startY = 0;
+    let currentShape = null;
 
     function renderSVG() {
       const code = editor.value;
       preview.innerHTML = code;
+      svgElement = preview.querySelector('svg');
+      if (svgElement) setupDrawing();
+    }
+
+    function setupDrawing() {
+      svgElement.style.cursor = 'crosshair';
+      svgElement.addEventListener('mousedown', onMouseDown);
+      svgElement.addEventListener('mousemove', onMouseMove);
+      svgElement.addEventListener('mouseup', onMouseUp);
+    }
+
+    function onMouseDown(e) {
+      const shape = shapeSelector.value;
+      if (shape === 'none') return;
+      drawing = true;
+      const pt = svgElement.createSVGPoint();
+      pt.x = e.offsetX;
+      pt.y = e.offsetY;
+      startX = pt.x;
+      startY = pt.y;
+      // crea element
+      if (shape === 'rect') {
+        currentShape = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        currentShape.setAttribute('x', startX);
+        currentShape.setAttribute('y', startY);
+        currentShape.setAttribute('width', 0);
+        currentShape.setAttribute('height', 0);
+        currentShape.setAttribute('fill', 'transparent');
+        currentShape.setAttribute('stroke', 'black');
+      } else if (shape === 'circle') {
+        currentShape = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        currentShape.setAttribute('cx', startX);
+        currentShape.setAttribute('cy', startY);
+        currentShape.setAttribute('r', 0);
+        currentShape.setAttribute('fill', 'transparent');
+        currentShape.setAttribute('stroke', 'black');
+      } else if (shape === 'line') {
+        currentShape = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        currentShape.setAttribute('x1', startX);
+        currentShape.setAttribute('y1', startY);
+        currentShape.setAttribute('x2', startX);
+        currentShape.setAttribute('y2', startY);
+        currentShape.setAttribute('stroke', 'black');
+      }
+      svgElement.appendChild(currentShape);
+    }
+
+    function onMouseMove(e) {
+      if (!drawing || !currentShape) return;
+      const pt = svgElement.createSVGPoint();
+      pt.x = e.offsetX;
+      pt.y = e.offsetY;
+      const dx = pt.x - startX;
+      const dy = pt.y - startY;
+      const shape = shapeSelector.value;
+      if (shape === 'rect') {
+        currentShape.setAttribute('width', Math.abs(dx));
+        currentShape.setAttribute('height', Math.abs(dy));
+        currentShape.setAttribute('x', dx < 0 ? pt.x : startX);
+        currentShape.setAttribute('y', dy < 0 ? pt.y : startY);
+      } else if (shape === 'circle') {
+        const r = Math.sqrt(dx * dx + dy * dy);
+        currentShape.setAttribute('r', r);
+      } else if (shape === 'line') {
+        currentShape.setAttribute('x2', pt.x);
+        currentShape.setAttribute('y2', pt.y);
+      }
+    }
+
+    function onMouseUp() {
+      if (drawing) {
+        drawing = false;
+        currentShape = null;
+        // actualitza el codi
+        editor.value = svgElement.outerHTML;
+      }
     }
 
     renderBtn.addEventListener('click', renderSVG);
-    editor.addEventListener('input', () => {
-      // Actualitza en viu opcional
-      renderSVG();
-    });
+    editor.addEventListener('input', renderSVG);
 
     downloadBtn.addEventListener('click', () => {
       const svgCode = editor.value;
