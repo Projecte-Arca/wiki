@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Editor SVG Millorat (Mòbil i Eines Avançades)</title>
+  <title>Editor SVG Pro</title>
   <style>
-    :root { --main-blue: #007bff; --light-gray: #f0f0f0; --dark-gray: #5a5a5a; }
+    :root { --main-blue: #007bff; --light-gray: #f0f0f0; --dark-gray: #5a5a5a; --danger-red: #dc3545; }
     html, body { height: 100%; margin: 0; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     body { display: flex; flex-direction: column; background-color: #f4f4f8; }
     h1 { text-align: center; margin: 0.5rem 0; font-size: 1.5rem; color: #333; }
@@ -16,536 +16,227 @@
     #toolbar button.active { background: var(--main-blue); border-color: #0056b3; }
     #toolbar button.active svg { fill: white; }
     #toolbar button:disabled { opacity: 0.4; cursor: not-allowed; }
-    #toolbar input[type=range] { vertical-align: middle; }
     #container { display: flex; flex: 1; width: 100%; gap: 1rem; padding: 1rem; box-sizing: border-box; min-height: 0; }
     #editor-container, #preview-container { flex: 1; min-width: 0; display: flex; flex-direction: column; border: 1px solid #ccc; border-radius: 8px; background: #fff; overflow: hidden; }
     #editor-container h2, #preview-container h2 { font-size: 1rem; text-align: center; padding: 0.5rem; margin: 0; background: #eee; border-bottom: 1px solid #ccc; }
     #editor, #preview { flex-grow: 1; position: relative; overflow: hidden; }
     textarea { width: 100%; height: 100%; resize: none; font-family: monospace; font-size: 1rem; border: none; outline: none; background: #2b2b2b; color: #f0f0f0; padding: 0.5rem; box-sizing: border-box; }
-    #preview svg { transform-origin: 0 0; }
-    .selected-indicator { outline: 2px dashed var(--main-blue); outline-offset: 2px; }
-    #color-controls button { width: auto; padding: 0 1rem; }
+    #preview svg { transform-origin: 0 0; touch-action: none; }
+    .selected-indicator { outline: 2px dashed var(--main-blue); outline-offset: 3px; }
+    #selection-box { position: absolute; background: rgba(0, 123, 255, 0.2); border: 1px solid var(--main-blue); pointer-events: none; }
     .color-indicator { width: 16px; height: 16px; border: 1px solid #333; display: inline-block; margin-right: 8px; vertical-align: middle; }
+    #color-controls button { width: auto; padding: 0 1rem; }
+    #file-importer { display: none; }
   </style>
 </head>
 <body>
-
-  <h1>Editor SVG Avançat</h1>
-
+  <h1>Editor SVG Pro</h1>
   <div id="toolbar">
     <div class="tool-group">
-      <button id="tool-select" title="Seleccionar i Moure (V)">
+      <button id="tool-select" title="Seleccionar (V)">
         <svg viewBox="0 0 24 24"><path d="M13.79,2.43L15.21,3.84L5.43,13.62L3.62,12.21L13.79,2.43M16,16.59L19.59,13L21,14.41L14.41,21L13,19.59L16,16.59M3,18.5L5.5,21H11.5L9.5,19H6.5L3,18.5Z" /></svg>
+      </button>
+      <button id="selectAllBtn" title="Seleccionar Tot (Ctrl+A)">
+        <svg viewBox="0 0 24 24"><path d="M2,2H11V6H9V4H4V9H6V11H2V2M22,13H18V11H20V9H15V13H13V22H22V13M4,13V15H9V20H11V15H13V13H4Z"/></svg>
       </button>
     </div>
     <div class="tool-group">
-      <button id="tool-pen" title="Ploma (P)">
-        <svg viewBox="0 0 24 24"><path d="M14.06,9L15,9.94L5.92,19H5V18.08L14.06,9M17.66,3C17.41,3 17.15,3.1 16.96,3.29L15.13,5.12L18.88,8.87L20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18.17,3.09 17.92,3 17.66,3M14.06,6.19L3,17.25V21H6.75L17.81,9.94L14.06,6.19Z" /></svg>
-      </button>
-      <button id="tool-rect" title="Rectangle (R)">
-         <svg viewBox="0 0 24 24"><path d="M4,6V18H20V6H4Z" /></svg>
-      </button>
-      <button id="tool-circle" title="Cercle (C)">
-        <svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" /></svg>
-      </button>
-      <button id="tool-line" title="Línia (L)">
-        <svg viewBox="0 0 24 24"><path d="M4,11H20V13H4V11Z" /></svg>
-      </button>
+      <button id="tool-pen" title="Ploma (P)"><svg viewBox="0 0 24 24"><path d="M14.06,9L15,9.94L5.92,19H5V18.08L14.06,9M17.66,3C17.41,3 17.15,3.1 16.96,3.29L15.13,5.12L18.88,8.87L20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18.17,3.09 17.92,3 17.66,3M14.06,6.19L3,17.25V21H6.75L17.81,9.94L14.06,6.19Z" /></svg></button>
+      <button id="tool-rect" title="Rectangle (R)"><svg viewBox="0 0 24 24"><path d="M4,6V18H20V6H4Z" /></svg></button>
+      <button id="tool-circle" title="Cercle (C)"><svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z" /></svg></button>
+      <button id="tool-line" title="Línia (L)"><svg viewBox="0 0 24 24"><path d="M4,11H20V13H4V11Z" /></svg></button>
+      <button id="tool-fill" title="Pot de Pintura (F)"><svg viewBox="0 0 24 24"><path d="M17.74,12.03L19,10.77L14.77,6.54L13.5,7.81L14.92,9.23L12,12.14L9.12,9.26L7.7,10.68L10.59,13.57L4.22,20H6L12,14L17.74,12.03M21,2L17,6L18,7L22,3L21,2Z"/></svg></button>
     </div>
     <div class="tool-group" id="color-controls">
-        <button id="strokeColorToggle" title="Color de Traç (S)">
-          <span class="color-indicator" style="background-color: black;"></span>Traç
-        </button>
-        <button id="fillColorToggle" title="Color de Fons (F)">
-          <span class="color-indicator" style="background-color: white;"></span>Fons
-        </button>
-        <label for="strokeWidth" title="Mida Traç/Goma">Mida: <span id="strokeWidthValue">5</span></label>
+        <button id="strokeColorToggle" title="Color de Traç (S)"><span class="color-indicator" style="background-color: black;"></span>Traç</button>
+        <button id="fillColorToggle" title="Color d'Omplir (D)"><span class="color-indicator" style="background-color: white; border: 1px solid black;"></span>Omplir</button>
+        <label for="strokeWidth" title="Mida Traç">Mida: <span id="strokeWidthValue">5</span></label>
         <input type="range" id="strokeWidth" min="1" max="100" value="5">
     </div>
     <div class="tool-group">
-      <button id="tool-erase" title="Goma d'esborrar (E)">
-        <svg viewBox="0 0 24 24"><path d="M16.24,3.56L20.44,7.76L7.76,20.44L3.56,16.24L16.24,3.56M22,2L2,22" /></svg>
-      </button>
-      <button id="deleteBtn" title="Eliminar seleccionat (Supr)" disabled>
-        <svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19V4M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" /></svg>
-      </button>
-    </div>
-     <div class="tool-group">
-      <button id="sendToBackBtn" title="Enviar al fons" disabled>
-        <svg viewBox="0 0 24 24"><path d="M2,16H10V14H2V16M2,12H12V10H2V12M2,8H12V6H2V8M14,14V4H4V2H14A2,2 0 0,1 16,4V14H14M22,8H18V4H20V2H18A2,2 0 0,0 16,4V8H14V10H16V14H18V10H20V14H22V12H20V8Z" /></svg>
-      </button>
-      <button id="bringToFrontBtn" title="Portar al davant" disabled>
-        <svg viewBox="0 0 24 24"><path d="M2,6H12V8H2V6M2,10H10V12H2V10M2,14H10V16H2V14M16,2H4V4H16V2M22,6H14V8H22V6M20,10H14V12H20V10M20,14H14V16H20V14Z" /></svg>
-      </button>
+      <button id="deleteBtn" title="Eliminar (Supr)" disabled><svg viewBox="0 0 24 24" style="fill: var(--danger-red);"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19V4M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" /></svg></button>
+      <button id="sendToBackBtn" title="Enviar al Fons" disabled><svg viewBox="0 0 24 24"><path d="M2,16H10V14H2V16M2,12H12V10H2V12M2,8H12V6H2V8M14,14V4H4V2H14A2,2 0 0,1 16,4V14H14M22,8H18V4H20V2H18A2,2 0 0,0 16,4V8H14V10H16V14H18V10H20V14H22V12H20V8Z" /></svg></button>
+      <button id="bringToFrontBtn" title="Portar al Davant" disabled><svg viewBox="0 0 24 24"><path d="M2,6H12V8H2V6M2,10H10V12H2V10M2,14H10V16H2V14M16,2H4V4H16V2M22,6H14V8H22V6M20,10H14V12H20V10M20,14H14V16H20V14Z" /></svg></button>
     </div>
     <div class="tool-group">
-      <button id="undoBtn" title="Desfer (Ctrl+Z)" disabled>
-        <svg viewBox="0 0 24 24"><path d="M12.5,8C9.85,8 7.45,9 5.6,10.6L2,7V16H11L7.38,12.38C8.77,11.22 10.54,10.5 12.5,10.5C16.04,10.5 19.05,12.81 20.1,16L22.47,15.22C21.08,11.03 17.15,8 12.5,8Z" /></svg>
-      </button>
-      <button id="redoBtn" title="Refer (Ctrl+Y)" disabled>
-        <svg viewBox="0 0 24 24"><path d="M18.4,10.6C16.55,9 14.15,8 11.5,8C6.85,8 2.92,11.03 1.53,15.22L3.9,16C4.95,12.81 7.96,10.5 11.5,10.5C13.46,10.5 15.23,11.22 16.62,12.38L13,16H22V7L18.4,10.6Z" /></svg>
-      </button>
+      <button id="undoBtn" title="Desfer (Ctrl+Z)" disabled><svg viewBox="0 0 24 24"><path d="M12.5,8C9.85,8 7.45,9 5.6,10.6L2,7V16H11L7.38,12.38C8.77,11.22 10.54,10.5 12.5,10.5C16.04,10.5 19.05,12.81 20.1,16L22.47,15.22C21.08,11.03 17.15,8 12.5,8Z" /></svg></button>
+      <button id="redoBtn" title="Refer (Ctrl+Y)" disabled><svg viewBox="0 0 24 24"><path d="M18.4,10.6C16.55,9 14.15,8 11.5,8C6.85,8 2.92,11.03 1.53,15.22L3.9,16C4.95,12.81 7.96,10.5 11.5,10.5C13.46,10.5 15.23,11.22 16.62,12.38L13,16H22V7L18.4,10.6Z" /></svg></button>
+    </div>
+     <div class="tool-group">
+        <button id="saveBtn" title="Guardar SVG"><svg viewBox="0 0 24 24"><path d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" /></svg></button>
+        <button id="importBtn" title="Importar SVG"><svg viewBox="0 0 24 24"><path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z" /></svg></button>
+        <input type="file" id="file-importer" accept="image/svg+xml">
     </div>
   </div>
 
   <div id="container">
-    <div id="editor-container">
-      <h2>Codi SVG</h2>
-      <div id="editor">
-          <textarea id="svgEditor" spellcheck="false"></textarea>
-      </div>
-    </div>
-    <div id="preview-container">
-       <h2>Vista Prèvia</h2>
-       <div id="preview"></div>
-    </div>
+    <div id="editor-container"><h2>Codi SVG</h2><div id="editor"><textarea id="svgEditor" spellcheck="false"></textarea></div></div>
+    <div id="preview-container"><h2>Vista Prèvia</h2><div id="preview"></div></div>
   </div>
 
   <script>
-    // ELEMENTS DEL DOM
-    const editor = document.getElementById('svgEditor');
-    const preview = document.getElementById('preview');
-    const strokeWidthInput = document.getElementById('strokeWidth');
-    const strokeWidthValue = document.getElementById('strokeWidthValue');
-    const undoBtn = document.getElementById('undoBtn');
-    const redoBtn = document.getElementById('redoBtn');
-    const deleteBtn = document.getElementById('deleteBtn');
-    const sendToBackBtn = document.getElementById('sendToBackBtn');
-    const bringToFrontBtn = document.getElementById('bringToFrontBtn');
-    const strokeColorToggle = document.getElementById('strokeColorToggle');
-    const fillColorToggle = document.getElementById('fillColorToggle');
-
-    // ESTAT DE L'APLICACIÓ
-    let currentTool = 'select';
-    let svgEl, drawing = false, isPanning = false, isMoving = false;
-    let startX = 0, startY = 0;
-    let currentEl = null, selectedElement = null;
-    let panX = 0, panY = 0, zoom = 1;
+    const get = (id) => document.getElementById(id);
+    const editor = get('svgEditor'), preview = get('preview');
+    let svgEl, currentTool = 'select', isDrawing = false, isPanning = false, isMoving = false, isMarqueeSelecting = false;
+    let startX = 0, startY = 0, panX = 0, panY = 0, zoom = 1;
+    let currentEl = null, selectedElements = [];
     let history = [], historyIndex = -1;
     const MAX_HISTORY = 50;
-    
-    // COLORS (Simplificat a blanc/negre)
-    let strokeColor = 'black';
-    let fillColor = 'white';
+    let strokeColor = 'black', fillColor = 'transparent';
 
-    // --- INICIALITZACIÓ I CONFIGURACIÓ ---
-    
+    const actionButtons = {
+      deleteBtn: get('deleteBtn'),
+      sendToBackBtn: get('sendToBackBtn'),
+      bringToFrontBtn: get('bringToFrontBtn')
+    };
+
     function initialize() {
-        setupToolbar();
         setupEventListeners();
-        loadSVG('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><defs></defs></svg>');
+        loadSVG('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" style="background-color: white;"><defs></defs></svg>');
         selectTool('select');
+        updateColorIndicators();
     }
-
-    function setupToolbar() {
-        document.querySelectorAll('#toolbar button[id^="tool-"]').forEach(btn => {
-            btn.addEventListener('click', () => selectTool(btn.id.replace('tool-', '')));
-        });
-    }
-
-    function selectTool(toolName) {
-        document.querySelector('#toolbar button.active')?.classList.remove('active');
-        document.getElementById(`tool-${toolName}`).classList.add('active');
-        currentTool = toolName;
-        updateCursor();
-        deselectElement();
-    }
-    
-    function updateCursor() {
-        if (!svgEl) return;
-        const cursors = {
-            select: 'default', pen: 'crosshair', rect: 'crosshair', circle: 'crosshair',
-            line: 'crosshair', erase: 'cell'
-        };
-        svgEl.style.cursor = cursors[currentTool] || 'default';
-        if (currentTool === 'select' && selectedElement) {
-            selectedElement.style.cursor = 'move';
-        }
-    }
-
-    // --- GESTIÓ D'ESDEVENIMENTS (RATOLÍ I TÀCTIL) ---
 
     function setupEventListeners() {
-        // Event listeners generals
-        strokeWidthInput.addEventListener('input', e => strokeWidthValue.textContent = e.target.value);
-        undoBtn.addEventListener('click', undo);
-        redoBtn.addEventListener('click', redo);
-        deleteBtn.addEventListener('click', deleteSelected);
-        bringToFrontBtn.addEventListener('click', () => layerSelected(true));
-        sendToBackBtn.addEventListener('click', () => layerSelected(false));
+        document.querySelectorAll('#toolbar button[id^="tool-"]').forEach(btn => btn.addEventListener('click', () => selectTool(btn.id)));
+        get('selectAllBtn').addEventListener('click', selectAllElements);
+        get('strokeWidth').addEventListener('input', e => get('strokeWidthValue').textContent = e.target.value);
+        ['undoBtn', 'redoBtn', 'deleteBtn', 'bringToFrontBtn', 'sendToBackBtn', 'saveBtn', 'importBtn'].forEach(id => get(id).addEventListener('click', window[id.replace('Btn','')]));
+        get('strokeColorToggle').addEventListener('click', () => toggleColor('stroke'));
+        get('fillColorToggle').addEventListener('click', () => toggleColor('fill'));
+        get('file-importer').addEventListener('change', importFile);
         editor.addEventListener('input', () => loadSVG(editor.value, false));
         window.addEventListener('keydown', handleKeyPress);
-        
-        // Toggles de color
-        strokeColorToggle.addEventListener('click', toggleColor);
-        fillColorToggle.addEventListener('click', toggleColor);
-
-        // Esdeveniments del canvas
-        const canvas = preview;
-        canvas.addEventListener('mousedown', handlePointerDown);
-        canvas.addEventListener('mousemove', handlePointerMove);
-        canvas.addEventListener('mouseup', handlePointerUp);
-        canvas.addEventListener('mouseleave', handlePointerUp);
-        canvas.addEventListener('wheel', handleWheel);
-        
-        // Esdeveniments tàctils per a mòbils
-        canvas.addEventListener('touchstart', handlePointerDown, { passive: false });
-        canvas.addEventListener('touchmove', handlePointerMove, { passive: false });
-        canvas.addEventListener('touchend', handlePointerUp, { passive: false });
-        canvas.addEventListener('touchcancel', handlePointerUp, { passive: false });
+        ['mousedown', 'touchstart'].forEach(evt => preview.addEventListener(evt, handlePointerDown, { passive: false }));
+        ['mousemove', 'touchmove'].forEach(evt => preview.addEventListener(evt, handlePointerMove, { passive: false }));
+        ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(evt => preview.addEventListener(evt, handlePointerUp, { passive: false }));
+        preview.addEventListener('wheel', handleWheel);
     }
 
     function getPoint(e) {
         e.preventDefault();
         const CTM = svgEl.getScreenCTM();
-        let clientX, clientY;
-        
-        if (e.touches) { // Tàctil
-            if (e.touches.length > 0) {
-              clientX = e.touches[0].clientX;
-              clientY = e.touches[0].clientY;
-            } else { // Si s'aixequen tots els dits
-              clientX = e.changedTouches[0].clientX;
-              clientY = e.changedTouches[0].clientY;
-            }
-        } else { // Ratolí
-            clientX = e.clientX;
-            clientY = e.clientY;
-        }
-
-        return {
-            x: (clientX - CTM.e) / CTM.a,
-            y: (clientY - CTM.f) / CTM.d,
-            button: e.button
-        };
+        const client = e.touches ? e.touches[0] || e.changedTouches[0] : e;
+        return { x: (client.clientX - CTM.e) / CTM.a, y: (client.clientY - CTM.f) / CTM.d, originalEvent: e };
     }
 
     function handlePointerDown(e) {
-        const { x, y, button } = getPoint(e);
-        
-        if (button === 1 || (e.touches && e.touches.length === 2)) {
-            isPanning = true;
-            startX = (e.touches ? e.touches[0].clientX : e.clientX);
-            startY = (e.touches ? e.touches[0].clientY : e.clientY);
-            return;
-        }
-
-        startX = x;
-        startY = y;
+        const { x, y, originalEvent: oe } = getPoint(e);
+        if ((oe.button === 1 || (oe.touches && oe.touches.length === 2))) { isPanning = true; startX = oe.touches ? oe.touches[0].clientX : oe.clientX; startY = oe.touches ? oe.touches[0].clientY : oe.clientY; return; }
+        startX = x; startY = y;
+        const target = oe.target;
 
         switch (currentTool) {
-            case 'select':
-                handleSelectDown(e.target, x, y);
+            case 'tool-select':
+                if (isValidElement(target)) {
+                    isMoving = true;
+                    if (oe.shiftKey) { toggleSelection(target); } else if (!selectedElements.includes(target)) { selectElement(target); }
+                } else { isMarqueeSelecting = true; createSelectionBox(oe.clientX, oe.clientY); deselectAll(); }
                 break;
-            case 'pen':
-                drawing = true;
-                createPath(x, y);
+            case 'tool-fill':
+                if(isValidElement(target)) { target.setAttribute('fill', fillColor); pushHistory(); }
                 break;
-            case 'rect': case 'circle': case 'line':
-                drawing = true;
-                createShape(currentTool, x, y);
-                break;
-            case 'erase':
-                drawing = true;
-                break;
+            default:
+                isDrawing = true;
+                if(currentTool === 'tool-pen') createPath(x,y); else createShape(currentTool.replace('tool-',''), x, y);
         }
     }
 
     function handlePointerMove(e) {
         if (isPanning) {
-            const currentX = (e.touches ? e.touches[0].clientX : e.clientX);
-            const currentY = (e.touches ? e.touches[0].clientY : e.clientY);
-            panX += currentX - startX;
-            panY += currentY - startY;
-            startX = currentX;
-            startY = currentY;
-            applyTransform();
-            return;
+            const client = e.touches ? e.touches[0] : e;
+            panX += client.clientX - startX; panY += client.clientY - startY;
+            startX = client.clientX; startY = client.clientY;
+            applyTransform(); return;
         }
-
-        if (!drawing && !isMoving) return;
-        const { x, y } = getPoint(e);
-
-        if (isMoving && selectedElement) {
-            moveSelected(x - startX, y - startY);
-            startX = x;
-            startY = y;
-        } else if (drawing) {
-            switch (currentTool) {
-                case 'pen': updatePath(x, y); break;
-                case 'rect': updateRect(x, y); break;
-                case 'circle': updateCircle(x, y); break;
-                case 'line': updateLine(x, y, e.ctrlKey); break;
-                case 'erase': eraseAt(x, y); break;
-            }
+        const { x, y, originalEvent: oe } = getPoint(e);
+        if (isMarqueeSelecting) { updateSelectionBox(oe.clientX, oe.clientY); }
+        else if (isMoving) { moveSelected(x - startX, y - startY); startX = x; startY = y; }
+        else if (isDrawing) {
+            const updateMap = { 'tool-rect': updateRect, 'tool-circle': updateCircle, 'tool-line': updateLine, 'tool-pen': updatePath };
+            updateMap[currentTool]?.(x, y, oe.ctrlKey);
             updateEditor();
         }
     }
 
     function handlePointerUp() {
-        if (drawing || isMoving) {
-            pushHistory();
-        }
-        drawing = false;
-        isPanning = false;
-        isMoving = false;
+        if (isDrawing || isMoving) pushHistory();
+        if (isMarqueeSelecting) selectInMarquee();
+        isDrawing = isPanning = isMoving = isMarqueeSelecting = false;
         currentEl = null;
+        removeSelectionBox();
     }
-    
-    function handleWheel(e) {
-        e.preventDefault();
-        const delta = e.deltaY > 0 ? 0.9 : 1.1;
-        zoom = Math.max(0.1, Math.min(10, zoom * delta));
-        applyTransform();
-    }
-    
-    function handleKeyPress(e) {
-        const keyMap = {
-            'Delete': deleteSelected, 'Backspace': deleteSelected,
-            'z': e.ctrlKey ? undo : null, 'y': e.ctrlKey ? redo : null,
-            'v': () => selectTool('select'), 'p': () => selectTool('pen'),
-            'r': () => selectTool('rect'), 'c': () => selectTool('circle'),
-            'l': () => selectTool('line'), 'e': () => selectTool('erase'),
-            's': () => strokeColorToggle.click(), 'f': () => fillColorToggle.click()
-        };
-        if (keyMap[e.key] && document.activeElement !== editor) {
-            e.preventDefault();
-            keyMap[e.key]();
-        }
-    }
-    
-    // --- LÒGICA DE LES EINES ---
 
+    function handleKeyPress(e) {
+        if (document.activeElement === editor) return;
+        const keyMap = { Delete: deleteSelection, Backspace: deleteSelection, 'a': e.ctrlKey ? selectAllElements : null, 'z': e.ctrlKey ? undo : null, 'y': e.ctrlKey ? redo : null, 'v': () => selectTool('tool-select'), 'p': () => selectTool('tool-pen'), 'r': () => selectTool('tool-rect'), 'c': () => selectTool('tool-circle'), 'l': () => selectTool('tool-line'), 'f': () => selectTool('tool-fill'), 's': () => toggleColor('stroke'), 'd': () => toggleColor('fill') };
+        if (keyMap[e.key]) { e.preventDefault(); keyMap[e.key](); }
+    }
+
+    function handleWheel(e) { e.preventDefault(); zoom *= e.deltaY > 0 ? 0.9 : 1.1; applyTransform(); }
+    
+    // --- LÒGICA D'EINES ---
     function createShape(type, x, y) {
         currentEl = document.createElementNS(svgEl.namespaceURI, type);
         currentEl.setAttribute('stroke', strokeColor);
-        currentEl.setAttribute('stroke-width', strokeWidthInput.value);
-        currentEl.setAttribute('fill', type === 'line' ? 'none' : 'transparent');
-        if (type === 'rect') {
-            currentEl.setAttribute('x', x);
-            currentEl.setAttribute('y', y);
-        } else if (type === 'circle') {
-            currentEl.setAttribute('cx', x);
-            currentEl.setAttribute('cy', y);
-        } else if (type === 'line') {
-            currentEl.setAttribute('x1', x);
-            currentEl.setAttribute('y1', y);
-            currentEl.setAttribute('x2', x);
-            currentEl.setAttribute('y2', y);
-        }
+        currentEl.setAttribute('stroke-width', get('strokeWidth').value);
+        currentEl.setAttribute('fill', type === 'line' ? 'none' : fillColor);
+        const attrMap = { rect: {x,y,width:0,height:0}, circle: {cx:x,cy:y,r:0}, line: {x1:x,y1:y,x2:x,y2:y} };
+        Object.entries(attrMap[type]).forEach(([k,v]) => currentEl.setAttribute(k,v));
         svgEl.appendChild(currentEl);
     }
-    
-    const updateRect = (x,y) => {
-        const w = x - startX, h = y - startY;
-        currentEl.setAttribute('width', Math.abs(w));
-        currentEl.setAttribute('height', Math.abs(h));
-        if (w < 0) currentEl.setAttribute('x', x);
-        if (h < 0) currentEl.setAttribute('y', y);
-    };
+    const updateRect = (x,y) => { const w=x-startX, h=y-startY; currentEl.setAttribute('width',Math.abs(w)); currentEl.setAttribute('height',Math.abs(h)); if(w<0)currentEl.setAttribute('x',x); if(h<0)currentEl.setAttribute('y',y); };
     const updateCircle = (x,y) => currentEl.setAttribute('r', Math.hypot(x - startX, y - startY));
-    const updateLine = (x,y, isStraight) => {
-      let x2=x, y2=y;
-      if(isStraight){
-        if(Math.abs(x-startX) > Math.abs(y-startY)) y2=startY; else x2=startX;
-      }
-      currentEl.setAttribute('x2',x2); currentEl.setAttribute('y2',y2);
-    }
-    
-    let pathData = '';
-    const createPath = (x,y) => {
-      pathData = `M${x},${y}`;
-      currentEl = document.createElementNS(svgEl.namespaceURI, 'path');
-      currentEl.setAttribute('d', pathData);
-      currentEl.setAttribute('stroke', strokeColor);
-      currentEl.setAttribute('stroke-width', strokeWidthInput.value);
-      currentEl.setAttribute('fill', 'none');
-      svgEl.appendChild(currentEl);
-    };
-    const updatePath = (x,y) => {
-      pathData += ` L${x},${y}`;
-      currentEl.setAttribute('d', pathData);
-    }
-    
-    function eraseAt(x, y) {
-        const size = parseFloat(strokeWidthInput.value);
-        const rect = svgEl.createSVGRect();
-        rect.x = x - size / 2;
-        rect.y = y - size / 2;
-        rect.width = rect.height = size;
-        const elements = svgEl.getIntersectionList(rect, null);
-        elements.forEach(el => {
-            if (el && el.nodeName !== 'svg' && el.nodeName !== 'defs') {
-                el.remove();
-            }
-        });
-        updateEditor();
-    }
-    
-    // --- SELECCIÓ, MOVIMENT I GESTIÓ D'ELEMENTS ---
-    
-    function handleSelectDown(target, x, y) {
-        if (target && target.nodeName !== 'svg' && target.nodeName !== 'defs') {
-            selectElement(target);
-            isMoving = true;
-        } else {
-            deselectElement();
-        }
-    }
-    
-    function selectElement(el) {
-        deselectElement();
-        selectedElement = el;
-        selectedElement.classList.add('selected-indicator');
-        selectedElement.style.cursor = 'move';
-        updateActionButtons();
-    }
+    const updateLine = (x,y,s) => { let x2=x, y2=y; if(s){if(Math.abs(x-startX)>Math.abs(y-startY))y2=startY;else x2=startX;} currentEl.setAttribute('x2',x2); currentEl.setAttribute('y2',y2); };
+    let pathData;
+    const createPath = (x,y) => { pathData = `M${x.toFixed(2)},${y.toFixed(2)}`; currentEl = document.createElementNS(svgEl.namespaceURI, 'path'); currentEl.setAttribute('d', pathData); currentEl.setAttribute('stroke', strokeColor); currentEl.setAttribute('stroke-width', get('strokeWidth').value); currentEl.setAttribute('fill', 'none'); svgEl.appendChild(currentEl); };
+    const updatePath = (x,y) => { pathData += ` L${x.toFixed(2)},${y.toFixed(2)}`; currentEl.setAttribute('d', pathData); };
 
-    function deselectElement() {
-        if (selectedElement) {
-            selectedElement.classList.remove('selected-indicator');
-            selectedElement.style.cursor = '';
-        }
-        selectedElement = null;
-        updateActionButtons();
-    }
+    // --- SELECCIÓ ---
+    function selectTool(toolId) { document.querySelector('#toolbar button.active')?.classList.remove('active'); get(toolId).classList.add('active'); currentTool = toolId; deselectAll(); }
+    const isValidElement = (el) => el && el.nodeName !== 'svg' && el.nodeName !== 'defs';
+    const addSelectionStyle = (el) => el.classList.add('selected-indicator');
+    const removeSelectionStyle = (el) => el.classList.remove('selected-indicator');
     
-    function moveSelected(dx, dy) {
-        const transformList = selectedElement.transform.baseVal;
-        let translate = transformList.getItem(0);
-
-        if (transformList.length === 0 || translate.type !== SVGTransform.SVG_TRANSFORM_TRANSLATE) {
-            translate = svgEl.createSVGTransform();
-            translate.setTranslate(0, 0);
-            transformList.insertItemBefore(translate, 0);
-        }
-        
-        translate.setTranslate(translate.matrix.e + dx, translate.matrix.f + dy);
-        updateEditor();
-    }
+    function deselectAll() { selectedElements.forEach(removeSelectionStyle); selectedElements = []; updateActionButtons(); }
+    function selectElement(el) { deselectAll(); selectedElements.push(el); addSelectionStyle(el); updateActionButtons(); }
+    function toggleSelection(el) { const i = selectedElements.indexOf(el); if(i>-1){ removeSelectionStyle(el); selectedElements.splice(i,1); } else { selectedElements.push(el); addSelectionStyle(el); } updateActionButtons(); }
+    function selectAllElements() { deselectAll(); svgEl.querySelectorAll('rect,circle,line,path').forEach(el => selectedElements.push(el)); selectedElements.forEach(addSelectionStyle); updateActionButtons(); }
     
-    function deleteSelected() {
-        if (!selectedElement) return;
-        selectedElement.remove();
-        deselectElement();
-        pushHistory();
-    }
+    // --- RECTANGLE DE SELECCIÓ ---
+    let selectionBox;
+    function createSelectionBox(x, y) { selectionBox = document.createElement('div'); selectionBox.id = 'selection-box'; selectionBox.style.left = `${x}px`; selectionBox.style.top = `${y}px`; selectionBox.startX = x; selectionBox.startY = y; preview.appendChild(selectionBox); }
+    function updateSelectionBox(x, y) { if(!selectionBox) return; const w=x-selectionBox.startX, h=y-selectionBox.startY; selectionBox.style.width=`${Math.abs(w)}px`; selectionBox.style.height=`${Math.abs(h)}px`; if(w<0)selectionBox.style.left=`${x}px`; if(h<0)selectionBox.style.top=`${y}px`; }
+    function removeSelectionBox() { selectionBox?.remove(); selectionBox = null; }
+    function selectInMarquee() { if(!selectionBox)return; const CTM=svgEl.getScreenCTM().inverse(); let pt=svgEl.createSVGPoint(); pt.x=parseFloat(selectionBox.style.left); pt.y=parseFloat(selectionBox.style.top); const p1=pt.matrixTransform(CTM); pt.x+=parseFloat(selectionBox.style.width); pt.y+=parseFloat(selectionBox.style.height); const p2=pt.matrixTransform(CTM); const selRect={x:Math.min(p1.x,p2.x), y:Math.min(p1.y,p2.y), width:Math.abs(p1.x-p2.x), height:Math.abs(p1.y-p2.y)}; svgEl.querySelectorAll('rect,circle,line,path').forEach(el=>{const bb=el.getBBox();if(bb.x<selRect.x+selRect.width&&bb.x+bb.width>selRect.x&&bb.y<selRect.y+selRect.height&&bb.y+bb.height>selRect.y){toggleSelection(el);}}); }
 
-    function layerSelected(toFront) {
-        if (!selectedElement) return;
-        if (toFront) {
-            svgEl.appendChild(selectedElement);
-        } else {
-            svgEl.insertBefore(selectedElement, svgEl.querySelector('defs')?.nextSibling);
-        }
-        pushHistory();
-    }
-    
-    function updateActionButtons() {
-        const isDisabled = !selectedElement;
-        deleteBtn.disabled = isDisabled;
-        sendToBackBtn.disabled = isDisabled;
-        bringToFrontBtn.disabled = isDisabled;
-    }
-    
-    // --- GESTIÓ DE SVG, HISTORIAL I COLORS ---
+    // --- ACCIONS SOBRE LA SELECCIÓ ---
+    function deleteSelection() { if (selectedElements.length === 0) return; selectedElements.forEach(el => el.remove()); deselectAll(); pushHistory(); }
+    function moveSelected(dx, dy) { selectedElements.forEach(el => { const t = el.transform.baseVal; let m = t.length > 0 ? t.getItem(0).matrix : svgEl.createSVGMatrix(); m = m.translate(dx, dy); if (t.length > 0) t.getItem(0).setMatrix(m); else { const tr = svgEl.createSVGTransform(); tr.setMatrix(m); t.appendItem(tr); }}); updateEditor(); }
+    function layerSelected(front) { selectedElements.forEach(el => { if (front) svgEl.appendChild(el); else svgEl.insertBefore(el, svgEl.querySelector('defs')?.nextSibling); }); pushHistory(); }
+    function bringToFront() { layerSelected(true); }
+    function sendToBack() { layerSelected(false); }
+    function updateActionButtons() { const d = selectedElements.length === 0; Object.values(actionButtons).forEach(b => b.disabled = d); }
 
-    function loadSVG(code, doPushHistory = true) {
-        preview.innerHTML = code || '<svg></svg>';
-        svgEl = preview.querySelector('svg');
-        if (!svgEl) return;
-        
-        const defs = svgEl.querySelector('defs') || document.createElementNS(svgEl.namespaceURI, 'defs');
-        if(!svgEl.contains(defs)) svgEl.prepend(defs);
+    // --- SVG, HISTORIAL, COLORS ---
+    function loadSVG(code, doPushHistory = true) { try { const doc = new DOMParser().parseFromString(code, "image/svg+xml"); if(doc.querySelector('parsererror')) throw new Error('Invalid SVG'); preview.innerHTML = ''; preview.append(doc.documentElement); svgEl = preview.querySelector('svg'); if (doPushHistory) pushHistory(); updateEditor(); applyTransform(); } catch (e) { console.error("Error al carregar SVG:", e); } }
+    function updateEditor() { if (document.activeElement !== editor) editor.value = formatSVG(svgEl.outerHTML); }
+    function pushHistory() { if (historyIndex < history.length - 1) history.splice(historyIndex + 1); history.push(svgEl.outerHTML); if (history.length > MAX_HISTORY) history.shift(); historyIndex = history.length - 1; updateHistoryButtons(); }
+    function undo() { if (historyIndex > 0) loadFromHistory(--historyIndex); }
+    function redo() { if (historyIndex < history.length - 1) loadFromHistory(++historyIndex); }
+    function loadFromHistory(index) { loadSVG(history[index], false); deselectAll(); updateHistoryButtons(); }
+    function updateHistoryButtons() { get('undoBtn').disabled = historyIndex <= 0; get('redoBtn').disabled = historyIndex >= history.length - 1; }
+    function toggleColor(type) { const isStroke = type === 'stroke'; let current = isStroke ? strokeColor : fillColor; let next = current === 'black' ? 'white' : 'black'; if(isStroke) strokeColor = next; else fillColor = (fillColor === 'transparent' || fillColor === 'white') ? 'black' : 'transparent'; updateColorIndicators(); selectedElements.forEach(el => { const prop = isStroke ? 'stroke' : 'fill'; if(prop === 'fill' && el.tagName === 'line') return; el.setAttribute(prop, isStroke ? strokeColor : fillColor); }); if(selectedElements.length>0) pushHistory(); }
+    function updateColorIndicators() { get('strokeColorToggle').querySelector('.color-indicator').style.backgroundColor = strokeColor; const fillInd = get('fillColorToggle').querySelector('.color-indicator'); fillInd.style.backgroundColor = fillColor; fillInd.style.borderColor = fillColor === 'transparent' || fillColor === 'white' ? 'black' : fillColor; }
 
-        if (doPushHistory) pushHistory();
-        updateEditor();
-        applyTransform();
-        updateCursor();
-    }
-    
-    function updateEditor() {
-        if (document.activeElement !== editor) {
-           editor.value = formatSVG(svgEl.outerHTML);
-        }
-    }
+    // --- FITXERS I UTILITATS ---
+    function save() { const clone = svgEl.cloneNode(true); clone.querySelectorAll('.selected-indicator').forEach(el => el.classList.remove('selected-indicator')); const data = new Blob([formatSVG(clone.outerHTML)], {type:'image/svg+xml'}); const a = document.createElement('a'); a.href = URL.createObjectURL(data); a.download = 'disseny.svg'; a.click(); URL.revokeObjectURL(a.href); }
+    function import() { get('file-importer').click(); }
+    function importFile(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (re) => loadSVG(re.target.result); reader.readAsText(file); e.target.value = ''; }
+    function applyTransform() { if (svgEl) svgEl.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`; }
+    function formatSVG(svg) { const parser=new DOMParser(),serializer=new XMLSerializer();const doc=parser.parseFromString(svg,"image/svg+xml");return serializer.serializeToString(doc.documentElement); }
 
-    function pushHistory() {
-        if (historyIndex < history.length - 1) {
-            history = history.slice(0, historyIndex + 1);
-        }
-        history.push(svgEl.outerHTML);
-        if (history.length > MAX_HISTORY) history.shift();
-        historyIndex = history.length - 1;
-        updateHistoryButtons();
-    }
-
-    const undo = () => { if (historyIndex > 0) loadFromHistory(--historyIndex); };
-    const redo = () => { if (historyIndex < history.length - 1) loadFromHistory(++historyIndex); };
-    
-    function loadFromHistory(index) {
-        preview.innerHTML = history[index];
-        svgEl = preview.querySelector('svg');
-        updateEditor();
-        applyTransform();
-        updateHistoryButtons();
-        deselectElement();
-    }
-
-    function updateHistoryButtons() {
-        undoBtn.disabled = historyIndex <= 0;
-        redoBtn.disabled = historyIndex >= history.length - 1;
-    }
-
-    function toggleColor(e) {
-        const btn = e.currentTarget;
-        const indicator = btn.querySelector('.color-indicator');
-        const isStroke = btn.id === 'strokeColorToggle';
-        
-        let currentColor = isStroke ? strokeColor : fillColor;
-        const newColor = currentColor === 'black' ? 'white' : 'black';
-        
-        if (isStroke) strokeColor = newColor; else fillColor = newColor;
-        
-        indicator.style.backgroundColor = newColor;
-        
-        // Aplica color a la selecció actual
-        if (selectedElement) {
-           const prop = isStroke ? 'stroke' : 'fill';
-           if(prop === 'fill' && selectedElement.tagName === 'line') return; // Les línies no tenen fons
-           selectedElement.setAttribute(prop, newColor);
-           pushHistory();
-           updateEditor();
-        }
-    }
-
-    // --- UTILITATS ---
-
-    function applyTransform() {
-        if (!svgEl) return;
-        svgEl.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
-    }
-
-    function formatSVG(svgString) {
-        // Funció simple per indentar el codi SVG a l'editor.
-        let indent = 0;
-        return svgString
-            .replace(/></g, '>\n<')
-            .replace(/<(svg|defs|g|path|rect|circle|line)([^>]*)>/g, (match, tag, attrs) => {
-                let result = '\n' + '  '.repeat(indent) + `<${tag}${attrs}>`;
-                if (!match.endsWith('/>')) indent++;
-                return result;
-            })
-            .replace(/<\/(svg|defs|g)>/g, match => {
-                indent--;
-                return '\n' + '  '.repeat(indent) + match;
-            })
-            .trim();
-    }
-    
-    // ARRENCAR L'APLICACIÓ
     initialize();
-
   </script>
 </body>
 </html>
