@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Editor SVG Pro (Metadades Integrades)</title>
+  <title>Editor SVG Pro (Versió Estable i Funcional)</title>
   <style>
     :root { --main-blue: #007bff; --light-gray: #f0f0f0; --dark-gray: #4a4a4a; --danger-red: #dc3545; --bg-color: #f4f4f8; --panel-bg: #fff; --header-bg: #eee; --border-color: #ccc; }
     html, body { height: 100%; margin: 0; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
@@ -28,24 +28,6 @@
     #preview-svg-wrapper { position: absolute; }
     svg { transform-origin: 0 0; touch-action: none; display: block; overflow: visible; background-color: white; }
     
-    /* --- NOU: Estils per a les pestanyes de metadades --- */
-    #metadata-tabs { display: flex; border-bottom: 1px solid var(--border-color); }
-    .meta-tab { padding: 0.5rem 1rem; cursor: pointer; background: var(--light-gray); font-size: 0.9rem; }
-    .meta-tab.active { background: var(--panel-bg); border: 1px solid var(--border-color); border-bottom: 1px solid var(--panel-bg); margin-bottom: -1px; font-weight: bold; }
-    .meta-content { display: none; } .meta-content.active { display: block; }
-
-    /* --- NOU: Estils per als formularis --- */
-    .meta-form { display: flex; flex-direction: column; gap: 0.75rem; padding-top: 0.5rem; }
-    .meta-form label { font-weight: bold; font-size: 0.9rem; margin-bottom: -0.25rem; }
-    .meta-form input, .meta-form textarea, .meta-form select { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit; font-size: 0.9rem; }
-    .meta-form textarea { min-height: 60px; resize: vertical; }
-    .meta-form input:disabled, .meta-form textarea:disabled, .meta-form select:disabled { background-color: #e9ecef; cursor: not-allowed; }
-
-    #objects-list { margin: 0; padding: 0; list-style-type: none; }
-    #objects-list li { padding: 0.5rem; border-bottom: 1px solid #eee; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    #objects-list li:hover { background-color: #f0f0f0; }
-    #objects-list li.selected { background-color: var(--main-blue); color: white; }
-
     #transform-box { position: absolute; border: 1px dashed var(--main-blue); pointer-events: none; display: none; z-index: 1000; }
     .handle { position: absolute; width: 10px; height: 10px; background-color: white; border: 1px solid var(--main-blue); pointer-events: all; border-radius: 50%; }
     .handle.rotate { top: -25px; left: calc(50% - 6px); cursor: grabbing; }
@@ -93,17 +75,7 @@
   <div id="main-content">
     <div id="left-panels">
         <div id="objects-list-container" class="panel"><h2 class="panel-header">Objectes</h2><div class="panel-content-wrapper"><ol id="objects-list"></ol></div></div>
-        <!-- NOU: Panell de Metadades amb Pestanyes -->
-        <div id="metadata-container" class="panel">
-            <div id="metadata-tabs">
-                <div class="meta-tab active" data-tab="selection">Selecció</div>
-                <div class="meta-tab" data-tab="doc">Document</div>
-            </div>
-            <div class="panel-content-wrapper">
-                <div id="meta-content-selection" class="meta-content active"><form id="metadata-form-selection" class="meta-form"></form></div>
-                <div id="meta-content-doc" class="meta-content"><form id="metadata-form-doc" class="meta-form"></form></div>
-            </div>
-        </div>
+        <div id="metadata-container" class="panel"></div>
     </div>
     <div id="preview-container">
       <h2 class="panel-header">Llenç</h2>
@@ -133,25 +105,10 @@
 
     // --- CICLE DE VIDA DE L'APLICACIÓ ---
     function initialize() {
-        populateMetaForms();
         setupEventListeners();
         loadSVG('<svg xmlns="http://www.w3.org/2000/svg" id="canvas" width="800" height="600" data-name="Nou Document"><defs></defs></svg>');
         selectTool('tool-select');
         updateColorIndicators();
-    }
-    
-    function populateMetaForms(){
-        const metaFieldsHTML = `
-            <label for="{idPrefix}-name">Nom</label><input type="text" id="{idPrefix}-name" data-meta="name">
-            <label for="{idPrefix}-desc">Descripció</label><textarea id="{idPrefix}-desc" data-meta="desc"></textarea>
-            <label for="{idPrefix}-tags">Tags (separats per coma)</label><input type="text" id="{idPrefix}-tags" data-meta="tags">
-            <label for="{idPrefix}-llosa">Descrit en Llosa</label><input type="text" id="{idPrefix}-llosa" data-meta="llosa">
-            <label for="{idPrefix}-scope">Àmbit</label>
-            <select id="{idPrefix}-scope" data-meta="scope">
-                <option value="general">General</option><option value="matematiques">Matemàtiques</option><option value="astronomia">Astronomia</option><option value="quimica">Química</option><option value="logica">Lògica</option><option value="fisica">Física</option><option value="altres">Altres</option>
-            </select>`;
-        get('metadata-form-selection').innerHTML = metaFieldsHTML.replace(/{idPrefix}/g, 'sel');
-        get('metadata-form-doc').innerHTML = metaFieldsHTML.replace(/{idPrefix}/g, 'doc');
     }
     
     function setupEventListeners() {
@@ -169,20 +126,18 @@
         previewEl.addEventListener('wheel', handleWheel, { passive: false });
         transformBoxEl.querySelectorAll('.handle').forEach(handle => { handle.addEventListener('mousedown', e => handleTransformStart(e, handle.className)); handle.addEventListener('touchstart', e => handleTransformStart(e, handle.className)); });
         objectsListEl.addEventListener('click', e => { if (e.target.tagName === 'LI') { const el = svgEl.querySelector('#' + e.target.dataset.id); if (el) { if (e.shiftKey) { toggleSelection(el); } else { selectElement(el); } } } });
-        get('metadata-tabs').addEventListener('click', e => { if (e.target.classList.contains('meta-tab')) switchMetaTab(e.target.dataset.tab); });
-        get('metadata-form-selection').addEventListener('input', e => updateMetadataFromForm(e.target, selectedElements[0]));
-        get('metadata-form-doc').addEventListener('input', e => updateMetadataFromForm(e.target, svgEl));
         window.addEventListener('keydown', handleKeyPress);
     }
     
+    // --- LÒGICA D'ESDEVENIMENTS ---
     function getPoint(e) {
         if (!svgEl) return {x:0, y:0};
         const pt = svgEl.createSVGPoint();
         const client = e.touches ? e.touches[0] || e.changedTouches[0] : e;
         pt.x = client.clientX;
         pt.y = client.clientY;
-        const CTM = svgEl.getScreenCTM().inverse();
-        return pt.matrixTransform(CTM);
+        const svgP = pt.matrixTransform(svgEl.getScreenCTM().inverse());
+        return {x: svgP.x, y: svgP.y};
     }
 
     function handlePointerDown(e) {
@@ -217,20 +172,23 @@
         if(currentEl) { selectElement(currentEl); currentEl = null; }
         removeSelectionBox();
     }
-    
+
     function handleKeyPress(e) {
         if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
-        if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSelection(); }
-        if (e.ctrlKey) {
-            const ctrlActions = { a: selectAllElements, z: undo, y: redo };
-            if (ctrlActions[e.key]) { e.preventDefault(); ctrlActions[e.key](); }
-        }
+        const keyActions = { Delete: deleteSelection, Backspace: deleteSelection };
+        if (keyActions[e.key]) { e.preventDefault(); keyActions[e.key](); return; }
+        if (e.ctrlKey) { const ctrlActions = { a: selectAllElements, z: undo, y: redo }; if (ctrlActions[e.key]) { e.preventDefault(); ctrlActions[e.key](); return; } }
+        const toolKeys = { v: 'tool-select', p: 'tool-pen', r: 'tool-rect', c: 'tool-circle', l: 'tool-line' };
+        if (toolKeys[e.key]) { e.preventDefault(); selectTool(toolKeys[e.key]); }
+        const colorKeys = { s: () => get('strokeColorToggle').click(), d: () => get('fillColorToggle').click() };
+        if (colorKeys[e.key]) { e.preventDefault(); colorKeys[e.key](); }
     }
     
-    function handleWheel(e) { e.preventDefault(); const r = previewEl.getBoundingClientRect(); const factor = e.deltaY > 0 ? 0.9 : 1.1; const oldZoom = zoom; zoom = Math.max(0.1, Math.min(20, zoom * factor)); const mouseX = e.clientX - r.left; const mouseY = e.clientY - r.top; const svgPoint = new DOMPoint(mouseX,mouseY).matrixTransform(svgWrapperEl.getCTM().inverse()); panX -= svgPoint.x * (factor - 1) * oldZoom; panY -= svgPoint.y * (factor - 1) * oldZoom; applyTransform(); }
-    
-    function createShape(type, x, y) { objectCounters[type] = (objectCounters[type] || 0) + 1; const id = `${type}_${objectCounters[type]}`; currentEl = document.createElementNS('http://www.w3.org/2000/svg', type); currentEl.id = id; currentEl.dataset.name = id.replace('_', ' '); currentEl.setAttribute('stroke', strokeColor); currentEl.setAttribute('stroke-width', get('strokeWidth').value); currentEl.setAttribute('fill', type === 'line' ? 'none' : fillColor); const attr = { rect: {x,y,width:0,height:0}, circle: {cx:x,cy:y,r:0}, line: {x1:x,y1:y,x2:x,y2:y} }; Object.entries(attr[type]).forEach(([k,v]) => currentEl.setAttribute(k,v)); svgEl.appendChild(currentEl); }
-    function createPath(x,y) { objectCounters.path = (objectCounters.path || 0) + 1; const id = `path_${objectCounters.path}`; let pathData = `M${x.toFixed(2)},${y.toFixed(2)}`; currentEl = document.createElementNS('http://www.w3.org/2000/svg', 'path'); currentEl.id = id; currentEl.dataset.name = id.replace('_', ' '); currentEl.setAttribute('d', pathData); currentEl.setAttribute('stroke', strokeColor); currentEl.setAttribute('stroke-width', get('strokeWidth').value); currentEl.setAttribute('fill', 'none'); svgEl.appendChild(currentEl); }
+    function handleWheel(e) { e.preventDefault(); const r = previewEl.getBoundingClientRect(); const factor = e.deltaY > 0 ? 0.9 : 1.1; const oldZoom = zoom; zoom = Math.max(0.1, Math.min(20, zoom * factor)); const mouseX = e.clientX - r.left; const mouseY = e.clientY - r.top; panX = mouseX - (mouseX - panX) * (zoom / oldZoom); panY = mouseY - (mouseY - panY) * (zoom / oldZoom); applyTransform(); }
+
+    // --- DIBUIX I MANIPULACIÓ D'OBJECTES ---
+    function createShape(type, x, y) { objectCounters[type] = (objectCounters[type] || 0) + 1; const id = `${type}_${objectCounters[type]}`; const newEl = document.createElementNS('http://www.w3.org/2000/svg', type); newEl.id = id; newEl.dataset.name = id.replace('_', ' '); newEl.setAttribute('stroke', strokeColor); newEl.setAttribute('stroke-width', get('strokeWidth').value); newEl.setAttribute('fill', type === 'line' ? 'none' : fillColor); const attr = { rect: {x,y,width:0,height:0}, circle: {cx:x,cy:y,r:0}, line: {x1:x,y1:y,x2:x,y2:y} }; Object.entries(attr[type]).forEach(([k,v]) => newEl.setAttribute(k,v)); svgEl.appendChild(newEl); currentEl = newEl; }
+    function createPath(x,y) { objectCounters.path = (objectCounters.path || 0) + 1; const id = `path_${objectCounters.path}`; let pathData = `M${x.toFixed(2)},${y.toFixed(2)}`; const newEl = document.createElementNS('http://www.w3.org/2000/svg', 'path'); newEl.id = id; newEl.dataset.name = id.replace('_', ' '); newEl.setAttribute('d', pathData); newEl.setAttribute('stroke', strokeColor); newEl.setAttribute('stroke-width', get('strokeWidth').value); newEl.setAttribute('fill', 'none'); svgEl.appendChild(newEl); currentEl = newEl; }
     const updateRect = (x,y) => { const w=x-startX, h=y-startY; currentEl.setAttribute('width',Math.abs(w)); currentEl.setAttribute('height',Math.abs(h)); if(w<0)currentEl.setAttribute('x',x); if(h<0)currentEl.setAttribute('y',y); };
     const updateCircle = (x,y) => currentEl.setAttribute('r', Math.hypot(x - startX, y - startY));
     const updateLine = (x,y) => { currentEl.setAttribute('x2', x); currentEl.setAttribute('y2', y); };
@@ -242,24 +200,70 @@
     function toggleSelection(el) { const i = selectedElements.indexOf(el); if(i > -1){ el.classList.remove('selected-indicator'); selectedElements.splice(i,1); } else { selectedElements.push(el); el.classList.add('selected-indicator'); } updateUI(); }
     function selectAllElements() { deselectAll(); svgEl.querySelectorAll('rect,circle,line,path,g').forEach(el => selectedElements.push(el)); selectedElements.forEach(el => el.classList.add('selected-indicator')); updateUI(); }
     function deleteSelection() { if (!selectedElements.length) return; selectedElements.forEach(el => el.remove()); deselectAll(); pushHistory(); }
-    function moveSelected(dx, dy) { const transformMatrix = new DOMMatrix().translate(dx, dy); selectedElements.forEach(el => { const originalMatrix = new DOMMatrix(el.getAttribute('transform')); const newMatrix = transformMatrix.multiply(originalMatrix); el.setAttribute('transform', newMatrix.toString()); }); updateUI(false); }
+    function moveSelected(dx, dy) { const transformMatrix = new DOMMatrix().translate(dx, dy); selectedElements.forEach(el => { const originalMatrix = getTransformMatrix(el); const newMatrix = transformMatrix.multiply(originalMatrix); el.setAttribute('transform', newMatrix.toString()); }); updateUI(false); }
     function layerSelected(toFront) { if (!selectedElements.length) return; selectedElements.forEach(el => { if (toFront) svgEl.appendChild(el); else svgEl.insertBefore(el, svgEl.querySelector('defs')?.nextSibling || svgEl.firstChild); }); pushHistory(); }
-    function updateUI(updateAll = true) { const hasSelection = selectedElements.length > 0; const isSingleSelection = selectedElements.length === 1; get('deleteBtn').disabled = !hasSelection; get('bringToFrontBtn').disabled=!hasSelection; get('sendToBackBtn').disabled=!hasSelection; get('metadata-form-selection').querySelectorAll('input, textarea, select').forEach(i => i.disabled = !isSingleSelection); if (isSingleSelection) { populateMetadataForm(selectedElements[0], 'sel'); } else { clearMetadataForm('sel'); } populateMetadataForm(svgEl, 'doc'); if (updateAll) updateObjectsList(); drawTransformBox(); updateEditor(); }
-    function updateObjectsList() { objectsListEl.innerHTML = ''; Array.from(svgEl.children).filter(isValidElement).forEach(el => { const li = document.createElement('li'); li.textContent = el.dataset.name || el.id; li.dataset.id = el.id; if (selectedElements.includes(el)) li.classList.add('selected'); objectsListEl.appendChild(li); }); }
-    function switchMetaTab(tabName) { document.querySelectorAll('.meta-tab').forEach(t => t.classList.remove('active')); document.querySelector(`.meta-tab[data-tab="${tabName}"]`).classList.add('active'); document.querySelectorAll('.meta-content').forEach(c => c.classList.remove('active')); get(`meta-content-${tabName}`).classList.add('active'); }
-    function populateMetadataForm(el, prefix) { if (!el) return; get(`metadata-form-${prefix}`).querySelectorAll('[data-meta]').forEach(input => { input.value = el.dataset[input.dataset.meta] || ''; }); }
-    function clearMetadataForm(prefix) { get(`metadata-form-${prefix}`).querySelectorAll('input, textarea').forEach(input => input.value = ''); get(`${prefix}-scope`).value = 'general'; }
-    function updateMetadataFromForm(formInput, targetElement) { if (!targetElement) return; targetElement.dataset[formInput.dataset.meta] = formInput.value; if (formInput.dataset.meta === 'name') updateObjectsList(); }
-    function getCollectiveBBox() { if (selectedElements.length === 0) return null; let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity; selectedElements.forEach(el => { const rect = el.getBoundingClientRect(); minX = Math.min(minX, rect.left); minY = Math.min(minY, rect.top); maxX = Math.max(maxX, rect.right); maxY = Math.max(maxY, rect.bottom); }); return { x: minX, y: minY, width: maxX - minX, height: maxY - minY }; }
-    function drawTransformBox() { const bbox = getCollectiveBBox(); if (!bbox) { transformBoxEl.style.display = 'none'; return; } const previewRect = previewEl.getBoundingClientRect(); Object.assign(transformBoxEl.style, { display: 'block', left: `${bbox.x - previewRect.left}px`, top: `${bbox.y - previewRect.top}px`, width: `${bbox.width}px`, height: `${bbox.height}px` }); }
-    function handleTransformStart(e, handleClass) { e.stopPropagation(); isTransforming = true; transformState = { handle: handleClass, initialTransforms: selectedElements.map(el => new DOMMatrix(el.getAttribute('transform'))) }; }
-    function handleTransform(e) { /* Lògica de transformació aquí */ }
-    function loadSVG(code, doPushHistory = true) { try { const doc = new DOMParser().parseFromString(code, "image/svg+xml"); if(doc.querySelector('parsererror')) throw new Error('Codi SVG invàlid'); svgEl = doc.documentElement; svgWrapperEl.innerHTML = ''; svgWrapperEl.append(svgEl); if (doPushHistory) { history = [svgEl.outerHTML]; historyIndex = 0; } applyTransform(); updateUI(); updateHistoryButtons(); } catch (e) { console.error("Error al carregar SVG:", e); } }
+
+    // --- TRANSFORMACIONS ---
+    function getCollectiveBBox() {
+        if (selectedElements.length === 0) return null;
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        selectedElements.forEach(el => { const rect = el.getBoundingClientRect(); minX = Math.min(minX, rect.left); minY = Math.min(minY, rect.top); maxX = Math.max(maxX, rect.right); maxY = Math.max(maxY, rect.bottom); });
+        const rotation = selectedElements.length === 1 ? getRotationAngle(getTransformMatrix(selectedElements[0])) : 0;
+        return { x: minX, y: minY, width: maxX - minX, height: maxY - minY, rotation };
+    }
+
+    function drawTransformBox() {
+        const bbox = getCollectiveBBox();
+        if (!bbox || (bbox.width === 0 && bbox.height === 0)) { transformBoxEl.style.display = 'none'; return; }
+        const previewRect = previewEl.getBoundingClientRect();
+        Object.assign(transformBoxEl.style, { display: 'block', left: `${bbox.x - previewRect.left}px`, top: `${bbox.y - previewRect.top}px`, width: `${bbox.width}px`, height: `${bbox.height}px`, transform: `rotate(${bbox.rotation}deg)` });
+    }
+
+    function handleTransformStart(e, handleClass) {
+        e.stopPropagation(); isTransforming = true;
+        const bbox = getCollectiveBBox();
+        const center = { x: bbox.x + bbox.width / 2, y: bbox.y + bbox.height / 2 };
+        const { clientX, clientY } = e.touches ? e.touches[0] : e;
+        transformState = { handle: handleClass, bbox, center, startAngle: Math.atan2(clientY - center.y, clientX - center.x), initialTransforms: selectedElements.map(el => getTransformMatrix(el)) };
+    }
+
+    function handleTransform(e) {
+        const { handle, center, startAngle, initialTransforms } = transformState;
+        const client = e.touches ? e.touches[0] : e;
+        
+        if (handle.includes('rotate')) {
+            const currentAngle = Math.atan2(client.clientY - center.y, client.clientX - center.x);
+            const angleDelta = (currentAngle - startAngle) * 180 / Math.PI;
+            
+            const centerMatrix = new DOMMatrix().translate(center.x, center.y);
+            const rotationMatrix = new DOMMatrix().rotate(angleDelta);
+            const toOriginMatrix = new DOMMatrix().translate(-center.x, -center.y);
+
+            const finalTransform = centerMatrix.multiply(rotationMatrix).multiply(toOriginMatrix);
+
+            selectedElements.forEach((el, i) => {
+                const newMatrix = finalTransform.multiply(initialTransforms[i]);
+                el.setAttribute('transform', newMatrix.toString());
+            });
+        }
+        updateUI(false);
+    }
+
+    // --- HISTORIAL I SVG ---
+    function loadSVG(code, doPushHistory = true) {
+        try { const doc = new DOMParser().parseFromString(code, "image/svg+xml"); if(doc.querySelector('parsererror')) throw new Error('Codi SVG invàlid'); svgEl = doc.documentElement; svgWrapperEl.innerHTML = ''; svgWrapperEl.append(svgEl); if (doPushHistory) { history = [svgEl.outerHTML]; historyIndex = 0; } applyTransform(); updateUI(); updateHistoryButtons(); }
+        catch (e) { console.error("Error al carregar SVG:", e); }
+    }
     function pushHistory() { const currentState = svgEl.outerHTML; if (currentState === history[historyIndex]) return; if (historyIndex < history.length - 1) history.splice(historyIndex + 1); history.push(currentState); if (history.length > 50) history.shift(); historyIndex = history.length - 1; updateUI(); updateHistoryButtons(); }
     function undo() { if (historyIndex > 0) loadFromHistory(--historyIndex); }
     function redo() { if (historyIndex < history.length - 1) loadFromHistory(++historyIndex); }
-    function loadFromHistory(index) { loadSVG(history[index], false); }
+    function loadFromHistory(index) { loadSVG(history[index], false); updateHistoryButtons(); }
+
+    // --- UTILITATS ---
+    function getTransformMatrix(el) { return new DOMMatrix(getComputedStyle(el).transform); }
+    function getRotationAngle(matrix) { return Math.atan2(matrix.b, matrix.a) * 180 / Math.PI; }
     function applyTransform() { if (svgWrapperEl) { svgWrapperEl.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`; drawTransformBox(); } }
+    const updateUI = (updateAll = true) => { get('deleteBtn').disabled = selectedElements.length === 0; get('bringToFrontBtn').disabled = selectedElements.length === 0; get('sendToBackBtn').disabled = selectedElements.length === 0; if (updateAll) updateObjectsList(); drawTransformBox(); updateEditor(); };
     const updateEditor = () => { if (document.activeElement !== editorEl && svgEl) { editorEl.value = svgEl.outerHTML; } };
     const updateHistoryButtons = () => { get('undoBtn').disabled = historyIndex <= 0; get('redoBtn').disabled = historyIndex >= history.length - 1; };
     function toggleColor(type) { const isStroke = type === 'stroke'; if(isStroke){ strokeColor = strokeColor === 'black' ? 'white' : 'black'; } else { fillColor = fillColor === 'transparent' ? 'black' : 'transparent'; } updateColorIndicators(); if(selectedElements.length > 0) { selectedElements.forEach(el => { const prop = isStroke ? 'stroke' : 'fill'; if(prop === 'fill' && el.tagName === 'line') return; el.setAttribute(prop, isStroke ? strokeColor : fillColor); }); pushHistory(); }}
@@ -272,7 +276,9 @@
     function updateSelectionBox(x,y){ if(!selectionBox)return; const w=x-selectionBox.startX, h=y-selectionBox.startY; Object.assign(selectionBox.style, {width:`${Math.abs(w)}px`,height:`${Math.abs(h)}px`,left:`${w<0?x:selectionBox.startX}px`,top:`${h<0?y:selectionBox.startY}px`}); }
     function selectInMarquee(){ if(!selectionBox)return; const selRect = selectionBox.getBoundingClientRect(); svgEl.querySelectorAll('rect,circle,line,path,g').forEach(el=>{ const elRect=el.getBoundingClientRect(); if(!(elRect.right<selRect.left||elRect.left>selRect.right||elRect.bottom<selRect.top||elRect.top>selRect.bottom)) toggleSelection(el); }); }
     function removeSelectionBox(){ if(selectionBox){ selectionBox.remove(); selectionBox=null; } }
-    
+    function updateObjectsList(){ objectsListEl.innerHTML=''; svgEl.querySelectorAll('rect,circle,line,path,g').forEach(el => { const li=document.createElement('li'); li.dataset.id=el.id; li.textContent=el.dataset.name||el.id; objectsListEl.appendChild(li); }); }
+
+    // --- INICI DE L'APLICACIÓ ---
     initialize();
   </script>
 </body>
