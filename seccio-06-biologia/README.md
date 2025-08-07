@@ -1,10 +1,9 @@
----
+
 
 # Secció 06: Biologia
 
 Aquesta secció explora la ciència de la vida en totes les seves formes. Des de les molècules que constitueixen les cèl·lules fins a les complexes interaccions dins dels ecosistemes, la biologia revela els mecanismes, la història i la diversitat del món vivent. És el relat de com la matèria inerta es va organitzar per arribar a sentir, reproduir-se i evolucionar.
 
----
 
 ## Índex de Lloses
 
